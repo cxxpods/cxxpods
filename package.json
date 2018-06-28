@@ -1,0 +1,17 @@
+{
+  "name": "cunit",
+  "version": "0.0.1",
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "lodash": "^4.17.10",
+    "shelljs": "^0.8.2",
+    "winston": "^3.0.0",
+    "yargs": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/shelljs": "^0.8.0",
+    "@types/yargs": "^11.0.0",
+    "pkg": "^4.3.3",
+    "typescript": "^2.9.2"
+  }
+}
