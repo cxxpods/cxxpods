@@ -1,12 +1,12 @@
 
-const Yargs = require("yargs")
+const
+  Yargs = require("yargs"),
+  Path = require("path")
 
-const argv = Yargs
-  .command("repo","Repo management", require("./repo"))
+Yargs
+  .command(require("./repo/index"))
+  .command(require("./configure/index"))
   .demandCommand(1, "You need at least one command before moving on")
-  // .usage("$0 <command>", "Execute cunit command", argv => {
-  //   console.log("You must provide a command")
-  // })
   .argv
 
 //console.log(`Add url: ${argv.url}`,argv)

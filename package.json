@@ -1,16 +1,32 @@
 {
   "name": "cunit",
   "version": "0.0.1",
+  "scripts": {
+    "dev::compile": "mkdir -p dist && npx babel src/ --out-dir dist  --source-maps inline ",
+    "dev::watch": "mkdir -p dist && npx babel src/ --watch --out-dir dist  --source-maps inline"
+  },
+  "bin": {
+    "cunit": "./bin/cunit.js"
+  },
   "dependencies": {
     "chalk": "^2.4.1",
+    "js-yaml": "^3.12.0",
     "lodash": "^4.17.10",
     "shelljs": "^0.8.2",
+    "simple-git": "^1.96.0",
+    "typeguard": "0.0.12",
     "winston": "^3.0.0",
     "yargs": "^11.0.0"
   },
   "devDependencies": {
     "@types/shelljs": "^0.8.0",
     "@types/yargs": "^11.0.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-es2016": "^6.24.1",
+    "babel-preset-es2017": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "npx": "^10.2.0",
     "pkg": "^4.3.3",
     "typescript": "^2.9.2"
   }
