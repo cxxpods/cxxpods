@@ -5,7 +5,8 @@ const
   OS = require("os"),
   log = GetLogger(__filename),
   File = require("./util/File"),
-  _ = require('lodash')
+  _ = require('lodash'),
+  {Dependency,configureDependencies} = require("./Dependency")
 
 
 const System = {
@@ -176,41 +177,15 @@ function configureBuildTypes(project) {
 }
 
 
-class Dependency {
-  constructor(rootProject,name,version) {
-    this.name = name
-    this.version = version
-    this.resolved = false
-    this.dir = resolveDependency(name)
-    this.rootProject = rootProject
-    this.project = new Project(this.dir)
-    this.buildConfigs = rootProject.buildTypes.map(buildType => ({
-      type: buildType,
-      src: `${buildType.dir}/${this.name}-src`,
-      build: `${buildType.dir}/${this.name}-build`,
-    }))
-  }
-}
-
-
-function configureDependencies(project) {
-  const
-    configuredDependencies = project.config.dependencies || {}
-  
-  project.dependencies = Object
-    .keys(configuredDependencies)
-    .map(name => new Dependency(project,name,configuredDependencies[name]))
-}
-
-
 class Project {
-  constructor(path) {
+  constructor(path, rootProject = null) {
+    this.rootProject = rootProject
     this.projectDir = path
     this.config = {}
     this.configFiles = []
     this.profiles = []
-    this.toolchains = []
-    this.buildTypes = []
+    this.toolchains = rootProject ? rootProject.toolchains : []
+    this.buildTypes = rootProject ? rootProject.buildTypes : []
     this.loadConfigFile(`${path}/cunit.yml`)
     
     const localConfigFile = `${path}/cunit.local.yml`
@@ -221,7 +196,9 @@ class Project {
     // SET THE PROJECT NAME
     this.name = this.config.name || _.last(_.split(path,"/"))
     
-    configureBuildTypes(this)
+    if (!this.buildTypes.length)
+      configureBuildTypes(this)
+    
     configureDependencies(this)
   }
   
