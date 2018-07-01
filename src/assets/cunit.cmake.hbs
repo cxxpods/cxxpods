@@ -27,7 +27,7 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "{{ name }}")
   )
 
   list(INSERT CMAKE_MODULE_PATH 0 "{{rootDir}}/lib/cmake")
-  #set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "{{rootDir}}/lib/cmake" CACHE STRING "Modules for CMake" FORCE)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "{{rootDir}}/lib/cmake" CACHE STRING "Modules for CMake" FORCE)
   #message("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 endif()
 {{/each}}
