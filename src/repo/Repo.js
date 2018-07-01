@@ -92,7 +92,7 @@ async function updateRepo(url) {
       }
       
       
-      await git.fetch(remotes[0].name,branchSummary.current,{'--all': null})
+      await git.raw(["fetch","--all"])
       await git.reset("hard",["origin/master"])
       await git.pull(remotes[0].name, branchSummary.current,{
         "--depth": "1"
