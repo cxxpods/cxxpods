@@ -1,0 +1,11 @@
+
+include_directories(
+  {{cunitBuildRoot}}/include
+  BEFORE
+)
+
+link_directories(
+  {{cunitBuildRoot}}/lib
+)
+
+list(APPEND CMAKE_MODULE_PATH {{cunitBuildRoot}}/lib/cmake)

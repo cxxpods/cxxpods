@@ -4,8 +4,8 @@ const
   Path = require("path")
 
 Yargs
-  .command(require("./repo/index"))
-  .command(require("./configure/index"))
+  .command(require("./commands/RepoCommands"))
+  .command(require("./commands/ProjectCommands"))
   .demandCommand(1, "You need at least one command before moving on")
   .argv
 

@@ -1,0 +1,33 @@
+
+include(GNUInstallDirs)
+include(CMakeFindDependencyMacro)
+
+# AVAILABLE BUILD TYPES
+set(CMAKE_CONFIGURATION_TYPES "{{buildTypeNames}}" CACHE STRING "" FORCE)
+
+{{#each buildTypes}}
+
+# GLOBAL BUILD TYPE NAME DECLARATIOn
+set(BT_{{ nameUpper }} {{ name }})
+
+# BUILD_TYPE {{ name }}
+if(${CMAKE_BUILD_TYPE} STREQUAL "{{ name }}")
+
+  {{#if toolchain.file }}
+  set(CMAKE_TOOLCHAIN_FILE  {{ toolchain.file }})
+  {{/if}}
+
+  include_directories(
+      {{rootDir}}/include
+    BEFORE
+  )
+
+  link_directories(
+      {{rootDir}}/lib
+  )
+
+  list(INSERT CMAKE_MODULE_PATH 0 "{{rootDir}}/lib/cmake")
+  #set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "{{rootDir}}/lib/cmake" CACHE STRING "Modules for CMake" FORCE)
+  #message("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
+endif()
+{{/each}}

@@ -104,7 +104,6 @@ async function updateRepo(url) {
         "--depth": "1"
       })
       
-      log.info("Result: ", result)
       return true
     }
   } catch (ex) {
@@ -116,11 +115,11 @@ async function updateRepo(url) {
 /**
  * Update repositories
  *
- * @param argv
+ * @param url
  */
-async function updateRepos(argv = {}) {
-  if (!_.isEmpty(argv.url)) {
-    await updateRepo(argv.url)
+async function updateRepos(url) {
+  if (!_.isEmpty(url)) {
+    await updateRepo(url)
   } else {
     const repoUrls = Config.repos
     for (url of repoUrls) {
@@ -132,11 +131,10 @@ async function updateRepos(argv = {}) {
 /**
  * Add a new repository
  *
- * @param argv
+ * @param url
  */
-async function addRepo(argv) {
+async function addRepo(url) {
   const
-    {url} = argv,
     name = parseRepoName(url)
   
   log.info(`Adding repo ${name}@${url}`)
@@ -155,11 +153,10 @@ async function addRepo(argv) {
 /**
  * Remove a repo
  *
- * @param argv
+ * @param url
  */
-function removeRepo(argv) {
+function removeRepo(url) {
   const
-    {url} = argv,
     name = parseRepoName(url)
   
   if (!Config.repos.includes(url)) {

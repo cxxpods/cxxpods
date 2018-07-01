@@ -1,6 +1,7 @@
 
 const
   Fs = require('fs'),
+  Path = require('path'),
   Yaml = require('js-yaml'),
   sh = require('shelljs')
 
@@ -32,6 +33,10 @@ function readFileYaml(path) {
   return Yaml.safeLoad(readFile(path))
 }
 
+function readAsset(assetPath) {
+  return readFile(Path.resolve(__dirname,"..","assets",assetPath))
+}
+
 function writeFile(path,content) {
   Fs.writeFileSync(path,content,'utf-8')
 }
@@ -40,6 +45,7 @@ module.exports = {
   exists,
   isDirectory,
   mkdirs,
+  readAsset,
   readFile,
   readFileJson,
   readFileYaml,
