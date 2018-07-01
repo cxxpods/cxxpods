@@ -192,7 +192,8 @@ async function configureDependency(project,dep,buildConfig) {
       `-DCMAKE_INSTALL_PREFIX=${type.rootDir}`,
       `-DCMAKE_MODULE_PATH=${type.rootDir}/lib/cmake`,
       `-DCMAKE_C_FLAGS="-I${type.rootDir}/include -fPIC -fPIE"`,
-      `-DCMAKE_CXX_FLAGS="-I${type.rootDir}/include -fPIC -fPIE"`
+      `-DCMAKE_CXX_FLAGS="-I${type.rootDir}/include -fPIC -fPIE"`,
+      `-DCMAKE_EXE_LINKER_FLAGS="-L${type.rootDir}/lib"`
     ],
     cmakeCmd = `${Paths.CMake} ${cmakeArgs.join(" ")} ${cmakeRoot}`
   
@@ -268,6 +269,7 @@ function postDependencyInstall(project, dep, buildConfig) {
       findFilename = `${rootDir}/lib/cmake/${_.last(_.split(cmakeFindTemplate,"/")).replace(/\.hbs$/,"")}`
     
     log.info(`Writing find file: ${findFilename}`)
+    File.mkdirParents(findFilename)
     File.writeFile(findFilename,findContent)
     
   }
