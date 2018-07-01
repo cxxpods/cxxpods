@@ -1,5 +1,5 @@
 {
-  "name": "cunit",
+  "name": "cunit-manager",
   "description": "CUnit enables simple CMake dependency management",
   "license": "MIT",
   "version": "0.0.1",

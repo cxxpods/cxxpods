@@ -25,7 +25,7 @@ cu is implemented in JS for flexibility, so installation
 anywhere is dead simple.
 
 ```bash
-npm i -g cunit
+npm i -g cunit-manager
 ```
 
 ## Repos and Recipes
