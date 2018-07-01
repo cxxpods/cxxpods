@@ -1,0 +1,27 @@
+set(CUNIT_CROSS_REQUIRED_VARS CMAKE_C_COMPILER CMAKE_CXX_COMPILER CMAKE_SYSROOT CMAKE_CROSS_PREFIX CMAKE_SYSTEM_NAME CMAKE_SYSTEM_PROCESSOR)
+set(CUNIT_CROSS_OPTIONAL_VARS CMAKE_CROSS_SUFFIX)
+
+function(cunit_toolchain_export)
+  # CHECK REQUIRED VARS
+  foreach(_checkVar ${CUNIT_CROSS_REQUIRED_VARS})
+    if ("${${_checkVar}}" STREQUAL "")
+      message(FATAL_ERROR "CUNIT: ${CUNIT_CROSS_REQUIRED_VARS} are all required to be set for toolchains.  ${CUNIT_CROSS_OPTIONAL_VARS} are optionally suggested")
+    endif()
+  endforeach()
+
+  # GET EXPORT FILE
+  set(exportFile $ENV{CUNIT_EXPORT_FILE})
+  if ("${exportFile}" STREQUAL "")
+    message(STATUS "CUNIT: No CUNIT_EXPORT_FILE variable set, not exporting, this is normal for regular builds")
+  else()
+
+    # EXPORT
+    message(STATUS "CUNIT: Exporting toolchain to ${exportFile}")
+    file(WRITE ${exportFile} "")
+    foreach(_exportVar ${CUNIT_CROSS_REQUIRED_VARS} ${CUNIT_CROSS_OPTIONAL_VARS})
+      if (NOT ${${_exportVar}} STREQUAL "")
+        file(APPEND ${exportFile} "${_exportVar}=${${_exportVar}}\n")
+      endif()
+    endforeach()
+  endif()
+endfunction()

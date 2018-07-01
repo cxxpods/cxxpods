@@ -1,7 +1,8 @@
 const
   {exists, mkdirs} = require("./util/File"),
   _ = require("lodash"),
-  Fs = require("fs")
+  Fs = require("fs"),
+  OS = require("os")
 
 const
   sh = require("shelljs"),
@@ -95,6 +96,9 @@ class Config {
 
 module.exports = {
   Config: new Config(),
+  Environment: {
+    CUNIT_PROC_COUNT: OS.cpus().length
+  },
   Paths: {
     CUnitRoot,
     CUnitRepo,

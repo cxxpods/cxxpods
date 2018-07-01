@@ -3,7 +3,9 @@ const
   sh = require("shelljs"),
   OS = require("os"),
   log = GetLogger(__filename),
+  {Paths} = require("../Config"),
   File = require("../util/File"),
+  Assert = require("../util/Assert"),
   _ = require('lodash'),
   {Dependency,DependencyManager} = require("./Dependency")
 
@@ -103,15 +105,38 @@ class Toolchain {
     this.file = toolchainFile
   }
   
-  toCMakeArgs() {
-    const args = []
+  /**
+   * Create toolchain environment config
+   * from cmake toolchain export
+   *
+   * @returns {*}
+   */
+  toScriptEnvironment() {
+    if (!this.file)
+      return {}
+      
+    const outputFile = `${sh.tempdir()}/toolchain.properties`
+    
+    sh.env["CUNIT_EXPORT_FILE"] = outputFile
+    
+    const result = sh.exec(`${Paths.CMake} -P ${this.file}`)
+    Assert.ok(result.code === 0,`Failed to get toolchain export: ${outputFile}`)
+    
+    sh.env["CUNIT_EXPORT_FILE"] = null
+    
+    return File.readFileProperties(outputFile)
+  }
+  
+  /**
+   * Create CMake command line options
+   */
+  toCMakeOptions() {
+    const opts = {}
     if (this.file) {
-      args.push(
-        `-DCMAKE_TOOLCHAIN_FILE=${this.file}`
-      )
+      opts["CMAKE_TOOLCHAIN_FILE"] =this.file
     }
     
-    return args
+    return opts
   }
 }
 
@@ -139,6 +164,30 @@ class BuildType {
   
   get name() {
     return `${this.toolchain.triplet}_${this.profile.toLowerCase()}`
+  }
+  
+  toScriptEnvironment() {
+    return _.merge(
+      {},
+      this.toolchain.toScriptEnvironment(),
+      {
+        CUNIT_BUILD_ROOT: this.rootDir,
+        CUNIT_BUILD_LIB: `${this.rootDir}/lib`,
+        CUNIT_BUILD_INCLUDE: `${this.rootDir}/include`,
+        CUNIT_BUILD_CMAKE: `${this.rootDir}/lib/cmake`,
+      })
+  }
+  
+  toCMakeOptions() {
+    return _.merge({},
+      this.toolchain.toCMakeOptions(),
+      {
+        CMAKE_INSTALL_PREFIX: this.rootDir,
+        CMAKE_MODULE_PATH: `${this.rootDir}/lib/cmake`,
+        CMAKE_C_FLAGS: `-I${this.rootDir}/include -fPIC -fPIE`,
+        CMAKE_CXX_FLAGS: `-I${this.rootDir}/include -fPIC -fPIE`,
+        CMAKE_EXE_LINKER_FLAGS: `-L${this.rootDir}/lib`
+      })
   }
   
   toString() {

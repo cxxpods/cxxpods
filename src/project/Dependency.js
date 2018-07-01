@@ -1,7 +1,6 @@
 const
   {GetLogger} = require("../Log"),
   {resolveDependency} = require("../repo/Repo"),
-  
   sh = require("shelljs"),
   OS = require("os"),
   log = GetLogger(__filename),

@@ -33,6 +33,21 @@ function readFile(path) {
   return Fs.readFileSync(path,'utf-8')
 }
 
+function readFileProperties(path) {
+  const content = readFile(path)
+  
+  return _.split(content,"\n")
+    .filter(line => !_.isEmpty(line) && line.indexOf('=') > -1)
+    .reduce((props,line) => {
+      const
+        index = line.indexOf('='),
+        key = line.substring(0,index)
+      
+      props[key] = line.substring(index + 1)
+      return props
+    },{})
+}
+
 function readFileJson(path) {
   return JSON.parse(readFile(path))
 }
@@ -58,6 +73,7 @@ module.exports = {
   mkdirParents,
   readAsset,
   readFile,
+  readFileProperties,
   readFileJson,
   readFileYaml,
   writeFile

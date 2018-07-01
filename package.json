@@ -22,6 +22,7 @@
     "semver": "^5.5.0",
     "shelljs": "^0.8.2",
     "simple-git": "^1.96.0",
+    "tmp": "0.0.33",
     "typeguard": "0.0.12",
     "winston": "^3.0.0",
     "yargs": "^11.0.0"
