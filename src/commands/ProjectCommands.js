@@ -23,11 +23,26 @@ module.exports = {
         handler: argv => {
           const
             project = new Project(),
-            graph = project.dependencyGraph
+            graph = Project.dependencyGraph
       
           log.info(`${project.name}: All dependencies in order they will be prepared`)
           graph.forEach(dep =>
             log.info(`${dep.name}@${dep.version} requires [${dep.project.dependencies.map(childDep => `${childDep.name}@${childDep.version}`).join(",")}]`)
+          )
+      
+        }
+      })
+      .command({
+        command: "tool-dependencies",
+        desc: "Tool dependencies, including nested",
+        handler: argv => {
+          const
+            project = new Project(),
+            graph = Project.toolDependencyGraph
+      
+          log.info(`${project.name}: All dependencies in order they will be prepared`)
+          graph.forEach(dep =>
+            log.info(`${dep.name}@${dep.version} requires [${dep.project.tools.map(childDep => `${childDep.name}@${childDep.version}`).join(",")}]`)
           )
       
         }

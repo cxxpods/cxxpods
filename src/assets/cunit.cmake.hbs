@@ -5,11 +5,18 @@ include(CMakeFindDependencyMacro)
 # AVAILABLE BUILD TYPES
 set(CMAKE_CONFIGURATION_TYPES "{{buildTypeNames}}" CACHE STRING "" FORCE)
 
-{{#each buildTypes}}
+list(FIND CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_FOUND)
+if(${CMAKE_BUILD_TYPE_FOUND} EQUAL -1)
+  message(FATAL_ERROR "Unknown build type ${CMAKE_BUILD_TYPE}, valid values are: ${CMAKE_CONFIGURATION_TYPES}")
+endif()
+
 
 # GLOBAL BUILD TYPE NAME DECLARATIOn
+{{#each buildTypes}}
 set(BT_{{ nameUpper }} {{ name }})
+{{/each}}
 
+{{#each buildTypes}}
 # BUILD_TYPE {{ name }}
 if(${CMAKE_BUILD_TYPE} STREQUAL "{{ name }}")
 
@@ -28,6 +35,19 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "{{ name }}")
 
   list(INSERT CMAKE_MODULE_PATH 0 "{{rootDir}}/lib/cmake")
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "{{rootDir}}/lib/cmake" CACHE STRING "Modules for CMake" FORCE)
-  #message("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 endif()
 {{/each}}
+
+
+# FIND TOOL IMPL
+macro(find_tool name)
+  set(_args ${ARGN})
+  list(GET _args 0 _isRequired)
+  set(_toolsCmake {{toolsRoot}}/lib/cmake)
+  set(_toolFile ${_toolsCmake}/FindTool${name}.cmake)
+  if (EXISTS ${_toolFile})
+    include(${_toolFile})
+  elseif(${_isRequired} STREQUAL "REQUIRED")
+    message(FATAL_ERROR "Unable to find tool ${name} @ ${_toolFile}")
+  endif()
+endmacro()

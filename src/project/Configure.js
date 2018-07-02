@@ -20,34 +20,6 @@ const
   Tmp = require("tmp")
 
 
-/**
- * Load project from disk
- *
- * @param path
- * @returns {Project}
- */
-function loadProject(path = sh.pwd()) {
-  return new Project(path)
-}
-
-/**
- * Configure project command
- *
- * @param argv
- */
-async function configure(argv) {
-  const
-    project = loadProject()
-  
-  log.info(`Generating cmake file: ${project.name}`)
-  await makeCMakeFile(project)
-  
-  log.info(`Configuring ${project.name} dependencies`)
-  await buildDependencies(project)
-  
-  
-}
-
 
 /**
  * Checkout and update dependency source code
@@ -120,7 +92,7 @@ function findCUnitConfigFile(path) {
  */
 async function makeCMakeFile(project) {
   const
-    {buildTypes,projectDir} = project
+    {buildTypes,projectDir,toolsRoot} = project
   
   
   const
@@ -136,6 +108,7 @@ async function makeCMakeFile(project) {
       toolchain: buildType.toolchain
     })),
     cmakeContext = {
+      toolsRoot,
       buildTypes: cmakeBuildTypes,
       buildTypeNames: cmakeBuildTypes.map(buildType => buildType.name).join(";")
     }
@@ -308,7 +281,7 @@ function hasDependencyChanged(dep,buildConfig) {
   const
     buildStampFile = `${buildConfig.build}/.cunit-build-stamp`,
     exists = File.exists(buildStampFile),
-    existingBuildStamp = File.readFile(buildStampFile),
+    existingBuildStamp = exists ? File.readFile(buildStampFile) : null,
     newBuildStamp = JSON.stringify(dep.toBuildStamp(buildConfig))
   
   return !exists || existingBuildStamp !== newBuildStamp
@@ -389,12 +362,27 @@ function writeDependencyBuildStamp(dep,buildConfig) {
   File.writeFileJSON(buildStampFile, dep.toBuildStamp(buildConfig))
 }
 
+
+/**
+ * Build dependencies
+ * @param project
+ */
+async function buildTools(project) {
+  const {toolDependencyGraph} = Project
+  
+  for (let dep of toolDependencyGraph) {
+    log.info(`\t${dep.name}@${dep.version}`)
+  
+    await buildDependency(project,dep,dep.buildConfigs[0])
+  }
+}
+
 /**
  * Build dependencies
  * @param project
  */
 async function buildDependencies(project) {
-  const {dependencyGraph} = project
+  const {dependencyGraph} = Project
   
   for (let dep of dependencyGraph) {
     log.info(`\t${dep.name}@${dep.version}`)
@@ -403,6 +391,37 @@ async function buildDependencies(project) {
       await buildDependency(project,dep,buildConfig)
     }
   }
+}
+
+/**
+ * Load project from disk
+ *
+ * @param path
+ * @returns {Project}
+ */
+function loadProject(path = sh.pwd()) {
+  return new Project(path)
+}
+
+/**
+ * Configure project command
+ *
+ * @param argv
+ */
+async function configure(argv) {
+  const
+    project = loadProject()
+  
+  log.info(`Generating cmake file: ${project.name}`)
+  await makeCMakeFile(project)
+  
+  log.info(`Building tools first`)
+  await buildTools(project)
+  
+  log.info(`Configuring ${project.name} dependencies`)
+  await buildDependencies(project)
+  
+  
 }
 
 

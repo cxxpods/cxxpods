@@ -53,26 +53,26 @@ const DependencyManager = {
       // FIND MAX UNIQUE VERSION FIRST
       _.groupBy(this.allDependencies,"name"), versionGroup =>
         versionGroup.reduce((maxVersion, version) =>
-          !maxVersion || SemVer.gt(version.version,maxVersion.version) ?
-            version :
-            maxVersion
-        , null))
-      
+            !maxVersion || SemVer.gt(SemVer.coerce(version.version),SemVer.coerce(maxVersion.version)) ?
+              version :
+              maxVersion
+          , null))
+    
       // SORT BY INTER-DEPENDENCY
       .sort((depA,depB) => {
-      const
-        depADependencies = this.collectDependencies(depA.project),
-        depBDependencies = this.collectDependencies(depB.project),
-        depARequiresB = depADependencies.includes(depB.name),
-        depBRequiresA = depBDependencies.includes(depA.name)
+        const
+          depADependencies = this.collectDependencies(depA.project),
+          depBDependencies = this.collectDependencies(depB.project),
+          depARequiresB = depADependencies.includes(depB.name),
+          depBRequiresA = depBDependencies.includes(depA.name)
       
-      if (depARequiresB && depBRequiresA)
-        throw `Dependency circular requirement: ${depA.name} <~> ${depB.name}`
+        if (depARequiresB && depBRequiresA)
+          throw `Dependency circular requirement: ${depA.name} <~> ${depB.name}`
       
-      return (!depARequiresB && !depARequiresB) ? 0 : depARequiresB ? 1 : -1
-    })
-    
-    
+        return (!depARequiresB && !depARequiresB) ? 0 : depARequiresB ? 1 : -1
+      })
+  
+  
   }
   
 }
@@ -81,23 +81,58 @@ const DependencyManager = {
  * All dependencies
  */
 class Dependency {
-  constructor(rootProject,name,version) {
+  
+  /**
+   * Configure project dependencies
+   *
+   * @param project
+   * @param isTool
+   */
+  static configureProject(project, isTool = false) {
+    const
+      configuredDependencies = project.config.dependencies || {}
     
-    const Project = require("./Project")
+    project.dependencies = Object
+      .keys(configuredDependencies)
+      .map(name => new Dependency(project,name,configuredDependencies[name], isTool))
+  }
+  
+  /**
+   * Create a dependency instance
+   *
+   * @param rootProject
+   * @param name
+   * @param version
+   * @param isTool
+   */
+  constructor(rootProject,name,version, isTool) {
     
+    const
+      Project = require("./Project"),
+      Tool = require("./Tool")
+    
+    this.isTool = isTool
     this.name = name
     this.version = version
     this.resolved = false
     this.dir = resolveDependency(name)
     this.rootProject = rootProject
-    this.project = new Project(this.dir, rootProject)
-    this.buildConfigs = rootProject.buildTypes.map(buildType => ({
-      type: buildType,
-      src: `${buildType.dir}/${this.name}-src`,
-      build: `${buildType.dir}/${this.name}-build`,
-    }))
+    this.project = new Project(this.dir, rootProject, isTool)
+    this.buildConfigs = isTool ?
+      // MAKE TOOL BUILD CONFIGS
+      Tool.makeBuildConfigs(rootProject, name) :
+      
+      // NORMAL BUILD CONFIGS
+      rootProject.buildTypes.map(buildType => ({
+        type: buildType,
+        src: `${buildType.dir}/${this.name}-src`,
+        build: `${buildType.dir}/${this.name}-build`,
+      }))
     
-    DependencyManager.registerDependency(this)
+    if (isTool)
+      Tool.registerTool(this)
+    else
+      DependencyManager.registerDependency(this)
   }
   
   toBuildStamp(buildConfig) {
@@ -117,22 +152,12 @@ class Dependency {
         0
     }
   }
-}
-
-
-/**
- * Configure project dependencies
- *
- * @param project
- */
-Dependency.configureProject = function (project) {
-  const
-    configuredDependencies = project.config.dependencies || {}
   
-  project.dependencies = Object
-    .keys(configuredDependencies)
-    .map(name => new Dependency(project,name,configuredDependencies[name]))
+  
 }
+
+
+
 
 
 module.exports = {

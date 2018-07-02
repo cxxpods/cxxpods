@@ -7,7 +7,8 @@ const
   File = require("../util/File"),
   Assert = require("../util/Assert"),
   _ = require('lodash'),
-  {Dependency,DependencyManager} = require("./Dependency")
+  {Dependency,DependencyManager} = require("./Dependency"),
+  Tool = require("./Tool")
 
 
 const System = {
@@ -161,11 +162,12 @@ const HostToolchain = makeHostToolchain()
  * Build type
  */
 class BuildType {
-  constructor(project,toolchain,profile) {
+  constructor(project,toolchain,profile,isTool = false) {
+    this.isTool = isTool
     this.profile = profile
     this.toolchain = toolchain
-    this.dir = `${project.projectDir}/.cunit/${this.toString()}`
-    this.rootDir = `${this.dir}/root`
+    this.dir = isTool ? project.toolsDir : `${project.projectDir}/.cunit/${this.toString()}`
+    this.rootDir = isTool ? project.toolsRoot : `${this.dir}/root`
     
     File.mkdirs(this.rootDir)
   }
@@ -258,9 +260,15 @@ function configureBuildTypes(project) {
 
 
 class Project {
-  constructor(path = sh.pwd(), rootProject = null) {
+  constructor(path = sh.pwd(), rootProject = null, isTool = false) {
     this.rootProject = rootProject
     this.projectDir = path
+    
+    this.isTool = isTool
+    this.toolsDir = `${path}/.cunit/tools`
+    this.toolsRoot = `${this.toolsDir}/root`
+    this.toolsBuildType = rootProject ? rootProject.toolsBuildType : new BuildType(this,HostToolchain,"Release",true)
+    
     this.config = {}
     this.configFiles = []
     this.profiles = []
@@ -282,17 +290,18 @@ class Project {
     this.name = this.config.name || _.last(_.split(path,"/"))
   
   
-    log.info(`Assembling toolchains and build types: ${this.name}`)
+    log.debug(`Assembling toolchains and build types: ${this.name}`)
     if (!this.buildTypes.length)
       configureBuildTypes(this)
   
-    log.info(`Loaded project: ${this.name}`)
-    Dependency.configureProject(this)
+    log.debug(`Loaded project: ${this.name}`)
     
+    Dependency.configureProject(this, isTool)
+    Tool.configureProject(this)
   }
   
   loadConfigFile(path) {
-    log.info(`Loading: ${path}`)
+    log.debug(`Loading: ${path}`)
     if (!File.exists(path)) {
       log.warn(`Unable to load: ${path}`)
       return
@@ -306,9 +315,13 @@ class Project {
    * Get sorted and ordered, unique dependencies
    * @returns {*|void}
    */
-  
-  get dependencyGraph() {
+
+  static get dependencyGraph() {
     return DependencyManager.toDependencyGraph()
+  }
+  
+  static get toolDependencyGraph() {
+    return Tool.toDependencyGraph()
   }
   
   
