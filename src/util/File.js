@@ -64,7 +64,13 @@ function writeFile(path,content) {
   Fs.writeFileSync(path,content,'utf-8')
 }
 
+function writeFileJSON(path,obj) {
+  Fs.writeFileSync(path,JSON.stringify(obj),'utf-8')
+}
 
+function getFileModifiedTimestamp(path) {
+  return Fs.statSync(path).mtimeMs
+}
 
 module.exports = {
   exists,
@@ -76,5 +82,7 @@ module.exports = {
   readFileProperties,
   readFileJson,
   readFileYaml,
-  writeFile
+  writeFile,
+  writeFileJSON,
+  getFileModifiedTimestamp
 }

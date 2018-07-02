@@ -1,16 +1,14 @@
 
 const
   Yargs = require("yargs"),
-  Path = require("path")
+  Repo = require("./repo/Repo")
 
-Yargs
-  .command(require("./commands/RepoCommands"))
-  .command(require("./commands/ProjectCommands"))
-  .demandCommand(1, "You need at least one command before moving on")
-  .argv
+Repo.firstTimeInit().then(() => {
+  Yargs
+    .command(require("./commands/RepoCommands"))
+    .command(require("./commands/ProjectCommands"))
+    .demandCommand(1, "You need at least one command before moving on")
+    .argv
+  
+})
 
-//console.log(`Add url: ${argv.url}`,argv)
-
-//Yargs.help()
-//Yargs.help
-//console.log("Hello")

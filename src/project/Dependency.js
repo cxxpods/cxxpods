@@ -99,6 +99,24 @@ class Dependency {
     
     DependencyManager.registerDependency(this)
   }
+  
+  toBuildStamp(buildConfig) {
+    const cmakeConfig = _.get(this,'project.config.cmake',{})
+    return {
+      name: this.name,
+      version: this.version,
+      dir: this.dir,
+      buildConfig: {
+        src: buildConfig.src,
+        build: buildConfig.build
+      },
+      buildType: buildConfig.type.toBuildStamp(),
+      cmakeConfig,
+      cmakeFindTemplateTimestamp: cmakeConfig.findTemplate ?
+        File.getFileModifiedTimestamp(`${this.dir}/${cmakeConfig.findTemplate}`) :
+        0
+    }
+  }
 }
 
 

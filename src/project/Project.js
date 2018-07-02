@@ -105,6 +105,14 @@ class Toolchain {
     this.file = toolchainFile
   }
   
+  toBuildStamp() {
+    return {
+      triplet: this.triplet.toString(),
+      file: this.file
+    }
+  }
+  
+  
   /**
    * Create toolchain environment config
    * from cmake toolchain export
@@ -188,6 +196,15 @@ class BuildType {
         CMAKE_CXX_FLAGS: `-I${this.rootDir}/include -fPIC -fPIE`,
         CMAKE_EXE_LINKER_FLAGS: `-L${this.rootDir}/lib`
       })
+  }
+  
+  toBuildStamp() {
+    return {
+      toolchain: this.toolchain.toBuildStamp(),
+      cmakeOptions: this.toCMakeOptions(),
+      profile: this.profile,
+      dir: this.dir
+    }
   }
   
   toString() {

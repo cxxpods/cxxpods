@@ -212,7 +212,14 @@ async function configureDependency(project,dep,buildConfig) {
   
 }
 
-
+/**
+ * Build a CMake Dependency
+ *
+ * @param project
+ * @param dep
+ * @param buildConfig
+ * @returns {Promise<void>}
+ */
 async function buildDependencyCMake(project,dep,buildConfig) {
   const
     {name,version} = dep
@@ -240,7 +247,14 @@ async function buildDependencyCMake(project,dep,buildConfig) {
   
 }
 
-
+/**
+ * Build a manual dependency
+ *
+ * @param project
+ * @param dep
+ * @param buildConfig
+ * @returns {Promise<void>}
+ */
 async function buildDependencyManual(project,dep,buildConfig) {
   const
     {dir,name,version,project:{config:{build:buildStepConfigs}}} = dep,
@@ -283,6 +297,22 @@ async function buildDependencyManual(project,dep,buildConfig) {
   })
 }
 
+/**
+ * Read a build stamp
+ *
+ * @param buildConfig
+ * @param dep
+ * @return {boolean}
+ */
+function hasDependencyChanged(dep,buildConfig) {
+  const
+    buildStampFile = `${buildConfig.build}/.cunit-build-stamp`,
+    exists = File.exists(buildStampFile),
+    existingBuildStamp = File.readFile(buildStampFile),
+    newBuildStamp = JSON.stringify(dep.toBuildStamp(buildConfig))
+  
+  return !exists || existingBuildStamp !== newBuildStamp
+}
 
 /**
  * Build a dependency
@@ -294,7 +324,13 @@ async function buildDependencyManual(project,dep,buildConfig) {
  */
 async function buildDependency(project,dep,buildConfig) {
   const
-    {project:{config:{buildType = "cmake"}}} = dep
+    {name,version,project:{config:{buildType = "cmake"}}} = dep,
+    changed = hasDependencyChanged(dep,buildConfig)
+  
+  if (!changed) {
+    log.info(`${buildConfig.type}: Dependency ${name}@${version} has not changed, skipping`)
+    return
+  }
   
   // CHECKOUT+UPDATE DEPENDENCY SOURCE
   await checkoutDependencyAndUpdateSource(project,dep,buildConfig)
@@ -312,9 +348,16 @@ async function buildDependency(project,dep,buildConfig) {
   postDependencyInstall(project,dep,buildConfig)
 }
 
+/**
+ * Post installation steps
+ *
+ * @param project
+ * @param dep
+ * @param buildConfig
+ */
 function postDependencyInstall(project, dep, buildConfig) {
   const
-    {type} = buildConfig,
+    {type,build:buildDir} = buildConfig,
     rootDir = type.rootDir,
     cmakeConfig = getValue(() => dep.project.config.cmake,{}),
     cmakeFindTemplate = cmakeConfig.findTemplate
@@ -334,9 +377,16 @@ function postDependencyInstall(project, dep, buildConfig) {
       cunitCMakeDir: `${rootDir}/lib/cmake`
     },findFilename)
     
-    
   }
   
+  // Write the build stamp at the very end
+  writeDependencyBuildStamp(dep,buildConfig)
+}
+
+function writeDependencyBuildStamp(dep,buildConfig) {
+  const buildStampFile = `${buildConfig.build}/.cunit-build-stamp`
+  File.mkdirParents(buildStampFile)
+  File.writeFileJSON(buildStampFile, dep.toBuildStamp(buildConfig))
 }
 
 /**

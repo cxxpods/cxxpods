@@ -120,7 +120,7 @@ async function updateRepo(url) {
  *
  * @param url
  */
-async function updateRepos(url) {
+async function updateRepos(url = null) {
   if (!_.isEmpty(url)) {
     await updateRepo(url)
   } else {
@@ -225,10 +225,18 @@ function getRepoLocalPaths() {
   return Config.repos.map(url => getRepoLocalPath(url))
 }
 
+async function firstTimeInit() {
+  const {Config} = require("../Config")
+  if (Config.firstTime) {
+    await updateRepos()
+  }
+}
+
 // updateRepos()
 //   .then(() => log.info("Updated repos"))
 
 module.exports = {
+  firstTimeInit,
   updateRepos,
   addRepo,
   removeRepo,

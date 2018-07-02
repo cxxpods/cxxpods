@@ -37,7 +37,8 @@ if (!mkdirs(CUnitRepo)) {
  * @type {{rootPath: string, repos: *[]}}
  */
 const DefaultConfig = {
-  repos: []
+  repos: [],
+  ready: false
 }
 
 /**
@@ -50,6 +51,9 @@ class Config {
   constructor() {
     this.data = DefaultConfig
     this.load()
+    this.firstTime = !this.data.ready
+    this.data.ready = true
+    
     this.save()
   }
   
@@ -60,6 +64,7 @@ class Config {
     
     
     this.data = JSON.parse(Fs.readFileSync(CUnitConfigFile,'utf-8'))
+    
   }
   
   save() {
