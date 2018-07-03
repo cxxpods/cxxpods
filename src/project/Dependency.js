@@ -149,6 +149,9 @@ class Dependency {
       cmakeConfig,
       cmakeFindTemplateTimestamp: cmakeConfig.findTemplate ?
         File.getFileModifiedTimestamp(`${this.dir}/${cmakeConfig.findTemplate}`) :
+        0,
+      cmakeToolTemplateTimestamp: cmakeConfig.toolTemplate ?
+        File.getFileModifiedTimestamp(`${this.dir}/${cmakeConfig.toolTemplate}`) :
         0
     }
   }

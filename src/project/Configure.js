@@ -333,25 +333,31 @@ function postDependencyInstall(project, dep, buildConfig) {
     {type,build:buildDir} = buildConfig,
     rootDir = type.rootDir,
     cmakeConfig = getValue(() => dep.project.config.cmake,{}),
-    cmakeFindTemplate = cmakeConfig.findTemplate
-  
-  if (cmakeFindTemplate) {
-    const
-      templatePath = `${dep.dir}/${cmakeFindTemplate}`,
-      findFilename = `${rootDir}/lib/cmake/${_.last(_.split(cmakeFindTemplate,"/")).replace(/\.hbs$/,"")}`
-  
-    log.info(`Writing find file: ${findFilename}`)
-    File.mkdirParents(findFilename)
+    {findTemplate:cmakeFindTemplate,toolTemplate:cmakeToolTemplate} = cmakeConfig,
     
-    processTemplate(File.readFile(templatePath),{
+    cmakeContext = {
       cunitRootDir: rootDir,
       cunitLibDir: `${rootDir}/lib`,
       cunitIncludeDir: `${rootDir}/include`,
       cunitCMakeDir: `${rootDir}/lib/cmake`
-    },findFilename)
+    },
     
-  }
+    processCMakeTemplate = (cmakeTemplate) => {
+      const
+        templatePath = `${dep.dir}/${cmakeTemplate}`,
+        findFilename = `${rootDir}/lib/cmake/${_.last(_.split(cmakeTemplate,"/")).replace(/\.hbs$/,"")}`
+    
+      log.info(`Writing file: ${findFilename}`)
+      File.mkdirParents(findFilename)
+    
+      processTemplate(File.readFile(templatePath),cmakeContext,findFilename)
+    }
   
+  
+  [cmakeFindTemplate,cmakeToolTemplate]
+    .filter(it => !_.isEmpty(it))
+    .forEach(processCMakeTemplate)
+    
   // Write the build stamp at the very end
   writeDependencyBuildStamp(dep,buildConfig)
 }
