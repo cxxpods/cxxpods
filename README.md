@@ -105,6 +105,8 @@ dependencies:
   protobuf: 3.1.0
   opencv: 3.4.1
 
+tools:
+	protobuf: 3.1.0
 ```
 
 * Then run configure
