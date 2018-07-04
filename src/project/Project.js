@@ -146,7 +146,31 @@ class Toolchain {
     
     sh.env["CUNIT_EXPORT_FILE"] = null
     
-    return File.readFileProperties(outputFile)
+    const
+      props = File.readFileProperties(outputFile),
+      makeCrossTool = (name) => {
+        const toolPath = `${props.CMAKE_CROSS_PREFIX}${name}${props.CMAKE_CROSS_SUFFIX || ""}`
+        if (!File.exists(toolPath))
+          throw `Tool path for ${name} does not exist: ${toolPath}`
+        
+        return toolPath
+      }
+    
+    Object.assign(props,{
+      CC: props.CMAKE_C_COMPILER,
+      CXX: props.CMAKE_CXX_COMPILER,
+      CPP: props.CMAKE_CXX_COMPILER,
+      AR: makeCrossTool('ar'),
+      RANLIB: makeCrossTool('ranlib'),
+      OBJDUMP: makeCrossTool('objdump'),
+      STRIP: makeCrossTool('strip'),
+      NM: makeCrossTool('nm'),
+      OBJCOPY: makeCrossTool('objcopy'),
+      LD: makeCrossTool('ld'),
+      LDD: makeCrossTool('ldd'),
+      STRINGS: makeCrossTool('strings'),
+    })
+    return props
   }
   
   /**
@@ -211,6 +235,8 @@ class BuildType {
       {
         CMAKE_INSTALL_PREFIX: this.rootDir,
         CMAKE_MODULE_PATH: `${this.rootDir}/lib/cmake`,
+        CMAKE_LIBRARY_PATH: `${this.rootDir}/lib`,
+        CMAKE_INCLUDE_PATH: `${this.rootDir}/include`,
         CMAKE_C_FLAGS: `-I${this.rootDir}/include -fPIC -fPIE`,
         CMAKE_CXX_FLAGS: `-I${this.rootDir}/include -fPIC -fPIE`,
         CMAKE_EXE_LINKER_FLAGS: `-L${this.rootDir}/lib`

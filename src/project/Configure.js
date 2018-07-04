@@ -54,7 +54,7 @@ async function checkoutDependencyAndUpdateSource(project,dep,buildConfig) {
     remote = remotes[0].name
   
   // noinspection JSCheckFunctionSignatures
-  await git.fetch(remote,branchSummary.current,['--all','--tags','--prune'])
+  await git.raw(['fetch','--all','--tags','--prune'])
   
   // noinspection JSCheckFunctionSignatures
   const
@@ -125,12 +125,16 @@ async function makeCMakeFile(project) {
 /**
  * Create a dependency cmake file
  *
+ * @param project
  * @param buildConfig
  * @returns {Promise<void>}
  */
-async function makeDependencyCMakeFile(buildConfig) {
-  const {src,type} = buildConfig
-  const configFile = findCUnitConfigFile(src)
+async function makeDependencyCMakeFile(project,buildConfig) {
+  const
+    {src,type:buildType} = buildConfig,
+    configFile = findCUnitConfigFile(src),
+    {toolsRoot} = project
+  
   if (!configFile) {
     return
   }
@@ -139,7 +143,12 @@ async function makeDependencyCMakeFile(buildConfig) {
     cmakeOutputDir = `${src}/.cunit`,
     cmakeOutputFile = `${cmakeOutputDir}/cunit.cmake`,
     cmakeContext = {
-      cunitRootDir: type.rootDir
+      ...buildType,
+      name: buildType.name.replace(/-/g,"_").toLowerCase(),
+      nameUpper: buildType.name.replace(/-/g,"_").toUpperCase(),
+      rootDir: buildType.rootDir,
+      toolsRoot,
+      toolchain: buildType.toolchain
     }
   
   log.info(`Writing CMake file: ${cmakeOutputFile}`)
@@ -160,7 +169,7 @@ async function configureDependency(project,dep,buildConfig) {
     {src,build,type} = buildConfig
   
   // MAKE CUNIT CMAKE FILE IF REQUIRED
-  await makeDependencyCMakeFile(buildConfig)
+  await makeDependencyCMakeFile(project,buildConfig)
   
   // NOW CONFIGURE THE BUILD
   const

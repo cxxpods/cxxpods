@@ -1,11 +1,24 @@
 
 include_directories(
-  {{cunitBuildRoot}}/include
+  {{rootDir}}/include
   BEFORE
 )
 
 link_directories(
-  {{cunitBuildRoot}}/lib
+  {{rootDir}}/lib
 )
 
-list(APPEND CMAKE_MODULE_PATH {{cunitBuildRoot}}/lib/cmake)
+list(APPEND CMAKE_MODULE_PATH {{rootDir}}/lib/cmake)
+
+# FIND TOOL IMPL
+macro(find_tool name)
+set(_args ${ARGN})
+list(GET _args 0 _isRequired)
+set(_toolsCmake {{toolsRoot}}/lib/cmake)
+set(_toolFile ${_toolsCmake}/FindTool${name}.cmake)
+if (EXISTS ${_toolFile})
+include(${_toolFile})
+elseif(${_isRequired} STREQUAL "REQUIRED")
+message(FATAL_ERROR "Unable to find tool ${name} @ ${_toolFile}")
+endif()
+endmacro()
