@@ -101,10 +101,21 @@ function requiredTool(toolPath) {
  * Toolchain
  */
 class Toolchain {
-  constructor(triplet,toolchainFile = null) {
+  constructor(triplet,toolchainFileOrObject = null) {
     this.triplet = triplet
-    this.file = toolchainFile
+    if (toolchainFileOrObject && typeof toolchainFileOrObject === 'object') {
+      this.file =  toolchainFileOrObject.file
+      this.name = toolchainFileOrObject.name
+    } else {
+      this.file = toolchainFileOrObject
+    }
+    
+    if (this.file) {
+      this.file = this.file.startsWith("/") ? this.file : `${sh.pwd()}/${this.file}`
+    }
   }
+  
+  
   
   toBuildStamp() {
     return {
@@ -112,6 +123,8 @@ class Toolchain {
       file: this.file
     }
   }
+  
+  
   
   
   /**
@@ -128,7 +141,7 @@ class Toolchain {
     
     sh.env["CUNIT_EXPORT_FILE"] = outputFile
     
-    const result = sh.exec(`${Paths.CMake} -P ${this.file}`)
+    const result = sh.exec(`${Paths.CMake} -DCUNIT_TOOLCHAIN_EXPORT=ON -P ${this.file}`)
     Assert.ok(result.code === 0,`Failed to get toolchain export: ${outputFile}`)
     
     sh.env["CUNIT_EXPORT_FILE"] = null
@@ -146,6 +159,10 @@ class Toolchain {
     }
     
     return opts
+  }
+  
+  toString() {
+    return this.name || this.triplet.toString()
   }
 }
 
@@ -173,7 +190,7 @@ class BuildType {
   }
   
   get name() {
-    return `${this.toolchain.triplet}_${this.profile.toLowerCase()}`
+    return `${this.toolchain.toString()}_${this.profile.toLowerCase()}`
   }
   
   toScriptEnvironment() {
@@ -234,7 +251,7 @@ function configureBuildTypes(project) {
       .keys(config.toolchains || {})
       .map(triplet => {
         const
-          toolchainFile = config.toolchains[triplet],
+          toolchainFileOrObject = config.toolchains[triplet],
           [processor,system,compilerType] = _.split(triplet,"-")
         
         toolchains.push(new Toolchain(
@@ -243,7 +260,7 @@ function configureBuildTypes(project) {
             Object.keys(Processor).find(it => it.toLowerCase() === processor),
             Object.keys(CompilerType).find(it => it.toLowerCase() === compilerType)
           ),
-          toolchainFile.startsWith("/") ? toolchainFile : `${project.projectDir}/${toolchainFile}`
+          toolchainFileOrObject
         ))
       })
     

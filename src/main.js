@@ -14,6 +14,7 @@ Repo.firstTimeInit().then(() => {
       .argv
   } catch (ex) {
     log.error(`Failed`,ex)
+    console.error(ex)
   }
 })
 

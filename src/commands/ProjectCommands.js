@@ -58,6 +58,21 @@ module.exports = {
           await makeCMakeFile(project)
         }
       })
+  
+      .command({
+        command: "build-types",
+        desc: "List all build types",
+        handler: async (argv) => {
+          const
+            project = new Project(),
+            {buildTypes} = project
+  
+          log.info(`${project.name}: Build types`)
+          buildTypes.forEach(buildType =>
+            log.info(`${buildType} -> ${buildType.profile} = ${buildType.toolchain.triplet}`)
+          )
+        }
+      })
       .demandCommand(1, "You need at least one command before moving on")
 }
 
