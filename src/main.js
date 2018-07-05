@@ -1,16 +1,27 @@
 
+import * as Repo from './repo/Repo'
+import {GetLogger} from './Log'
+
 const
-  Yargs = require("yargs"),
-  Repo = require("./repo/Repo"),
-  {GetLogger} = require("./Log"),
   log = GetLogger(__filename)
+let
+  Yargs = require("yargs")
+
+
+function addCommands(file) {
+  const mod = require(file)
+  Yargs = mod.default ? mod.default(Yargs) : mod(Yargs)
+}
 
 Repo.firstTimeInit().then(() => {
   try {
-    Yargs
-      .command(require("./commands/RepoCommands"))
-      .command(require("./commands/ProjectCommands"))
-      .demandCommand(1, "You need at least one command before moving on")
+    [
+      "./commands/RepoCommands",
+      "./commands/ProjectCommands",
+      "./commands/InfoCommands"
+    ].forEach(addCommands)
+    
+    Yargs.demandCommand(1, "You need at least one command before moving on")
       .argv
   } catch (ex) {
     log.error(`Failed`,ex)

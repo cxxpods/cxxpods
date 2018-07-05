@@ -1,3 +1,7 @@
+import Toolchain from "./Toolchain"
+import BuildType from "./BuiltType"
+import {CompilerType, Processor, ProcessorNodeMap, System} from "./BuildConstants"
+
 const
   {GetLogger} = require("../Log"),
   sh = require("shelljs"),
@@ -11,35 +15,12 @@ const
   Tool = require("./Tool")
 
 
-const System = {
-  Darwin: "Darwin",
-  Linux: "Linux",
-  Windows: "Windows"
-}
 
-const Processor = {
-  x86: "x86",
-  x86_64: "x86_64",
-  arm: "arm",
-  aarch64: "aarch64"
-}
-
-const ProcessorNodeMap = {
-  [Processor.arm]: Processor.arm,
-  "arm64": Processor.aarch64,
-  "x64": Processor.x86_64,
-  "x32": Processor.x86
-}
-
-const CompilerType = {
-  GNU: "GNU",
-  AppleClang: "AppleClang"
-}
 
 /**
  * Triplet
  */
-class Triplet {
+export class Triplet {
   constructor(system,processor,compilerType) {
     if (!System[system]) throw `Unknown system: ${system}`
     if (!Processor[processor]) throw `Unknown processor: ${processor}`
@@ -79,183 +60,15 @@ const HostTriplet = makeHostTriplet()
 
 
 
+
 /**
- * Required tool
+ * The host toolchain
  *
- * @param toolPath
- * @returns {*}
+ * @type {Toolchain}
  */
-function requiredTool(toolPath) {
-  if (!File.exists(toolPath)) {
-    const altToolPath = sh.which(toolPath)
-    if (!File.exists(altToolPath))
-      throw `Unable to find tool: ${altToolPath}`
-    
-    toolPath = altToolPath
-  }
-  
-  return toolPath
-}
+const HostToolchain = Toolchain.makeHostToolchain(HostTriplet)
 
-/**
- * Toolchain
- */
-class Toolchain {
-  constructor(triplet,toolchainFileOrObject = null) {
-    this.triplet = triplet
-    if (toolchainFileOrObject && typeof toolchainFileOrObject === 'object') {
-      this.file =  toolchainFileOrObject.file
-      this.name = toolchainFileOrObject.name
-    } else {
-      this.file = toolchainFileOrObject
-    }
-    
-    if (this.file) {
-      this.file = this.file.startsWith("/") ? this.file : `${sh.pwd()}/${this.file}`
-    }
-  }
-  
-  
-  
-  toBuildStamp() {
-    return {
-      triplet: this.triplet.toString(),
-      file: this.file
-    }
-  }
-  
-  
-  
-  
-  /**
-   * Create toolchain environment config
-   * from cmake toolchain export
-   *
-   * @returns {*}
-   */
-  toScriptEnvironment() {
-    if (!this.file)
-      return {}
-      
-    const outputFile = `${sh.tempdir()}/toolchain.properties`
-    
-    sh.env["CUNIT_EXPORT_FILE"] = outputFile
-    
-    const result = sh.exec(`${Paths.CMake} -DCUNIT_TOOLCHAIN_EXPORT=ON -P ${this.file}`)
-    Assert.ok(result.code === 0,`Failed to get toolchain export: ${outputFile}`)
-    
-    sh.env["CUNIT_EXPORT_FILE"] = null
-    
-    const
-      props = File.readFileProperties(outputFile),
-      makeCrossTool = (name) => {
-        const toolPath = `${props.CMAKE_CROSS_PREFIX}${name}${props.CMAKE_CROSS_SUFFIX || ""}`
-        if (!File.exists(toolPath))
-          throw `Tool path for ${name} does not exist: ${toolPath}`
-        
-        return toolPath
-      }
-    
-    Object.assign(props,{
-      CC: props.CMAKE_C_COMPILER,
-      CXX: props.CMAKE_CXX_COMPILER,
-      CPP: props.CMAKE_CXX_COMPILER,
-      AR: makeCrossTool('ar'),
-      RANLIB: makeCrossTool('ranlib'),
-      OBJDUMP: makeCrossTool('objdump'),
-      STRIP: makeCrossTool('strip'),
-      NM: makeCrossTool('nm'),
-      OBJCOPY: makeCrossTool('objcopy'),
-      LD: makeCrossTool('ld'),
-      LDD: makeCrossTool('ldd'),
-      STRINGS: makeCrossTool('strings'),
-    })
-    return props
-  }
-  
-  /**
-   * Create CMake command line options
-   */
-  toCMakeOptions() {
-    const opts = {}
-    if (this.file) {
-      opts["CMAKE_TOOLCHAIN_FILE"] =this.file
-    }
-    
-    return opts
-  }
-  
-  toString() {
-    return this.name || this.triplet.toString()
-  }
-}
 
-/**
- * Create the host toolchain
- */
-function makeHostToolchain(triplet = HostTriplet) {
-  return new Toolchain(triplet)
-}
-
-const HostToolchain = makeHostToolchain()
-
-/**
- * Build type
- */
-class BuildType {
-  constructor(project,toolchain,profile,isTool = false) {
-    this.isTool = isTool
-    this.profile = profile
-    this.toolchain = toolchain
-    this.dir = isTool ? project.toolsDir : `${project.projectDir}/.cunit/${this.toString()}`
-    this.rootDir = isTool ? project.toolsRoot : `${this.dir}/root`
-    
-    File.mkdirs(this.rootDir)
-  }
-  
-  get name() {
-    return `${this.toolchain.toString()}_${this.profile.toLowerCase()}`
-  }
-  
-  toScriptEnvironment() {
-    return _.merge(
-      {},
-      this.toolchain.toScriptEnvironment(),
-      {
-        CUNIT_BUILD_ROOT: this.rootDir,
-        CUNIT_BUILD_LIB: `${this.rootDir}/lib`,
-        CUNIT_BUILD_INCLUDE: `${this.rootDir}/include`,
-        CUNIT_BUILD_CMAKE: `${this.rootDir}/lib/cmake`,
-      })
-  }
-  
-  toCMakeOptions() {
-    return _.merge({},
-      this.toolchain.toCMakeOptions(),
-      {
-        CMAKE_INSTALL_PREFIX: this.rootDir,
-        CMAKE_MODULE_PATH: `${this.rootDir}/lib/cmake`,
-        CMAKE_LIBRARY_PATH: `${this.rootDir}/lib`,
-        CMAKE_INCLUDE_PATH: `${this.rootDir}/include`,
-        CMAKE_C_FLAGS: `-I${this.rootDir}/include -fPIC -fPIE`,
-        CMAKE_CXX_FLAGS: `-I${this.rootDir}/include -fPIC -fPIE`,
-        CMAKE_EXE_LINKER_FLAGS: `-L${this.rootDir}/lib`
-      })
-  }
-  
-  toBuildStamp() {
-    return {
-      toolchain: this.toolchain.toBuildStamp(),
-      cmakeOptions: this.toCMakeOptions(),
-      profile: this.profile,
-      dir: this.dir
-    }
-  }
-  
-  toString() {
-    return this.name
-  }
-}
 
 
 /**
@@ -265,8 +78,8 @@ class BuildType {
  */
 function configureBuildTypes(project) {
   const
-    {config,toolchains} = project,
-    profiles = config.profiles ? config.profiles : ['Debug', 'Release']
+    {config,toolchains,android} = project,
+    profiles = android ? [] : config.profiles ? config.profiles : ['Debug', 'Release']
   
   if (toolchains.length === 0) {
     if (config.toolchainExcludeHost !== true) {
@@ -302,8 +115,23 @@ function configureBuildTypes(project) {
 }
 
 
-class Project {
-  constructor(path = sh.pwd(), rootProject = null, isTool = false) {
+
+/**
+ * Implement complex variable resolution
+ *
+ * @param project
+ * @param context
+ * @param processedConfigs
+ */
+function resolveConfigVariables(project,context = null, processedConfigs = []) {
+
+}
+
+/**
+ * Main project structure
+ */
+export default class Project {
+  constructor(path = sh.pwd(), rootProject = null, isTool = false, depConfig = {}) {
     this.rootProject = rootProject
     this.projectDir = path
     
@@ -318,28 +146,44 @@ class Project {
     this.toolchains = rootProject ? rootProject.toolchains : []
     this.buildTypes = rootProject ? rootProject.buildTypes : []
     
+    // LOAD THE PROJECT CONFIGURATION
     const cunitFile = require("./Configure").findCUnitConfigFile(path)
     if (!cunitFile)
       throw `No cmake file found in: ${path}`
+  
+    const cunitFiles = [cunitFile,`${path}/cunit.local.yml`]
     
-    this.loadConfigFile(cunitFile)
-    
-    const localConfigFile = `${path}/cunit.local.yml`
-    if (File.exists(localConfigFile)) {
-      this.loadConfigFile(localConfigFile)
-    }
+    cunitFiles.forEach(file => {
+        if (File.exists(file)) {
+          this.loadConfigFile(file)
+        } else {
+          log.info(`CUnit file (${file}) does not exist`)
+        }
+    })
+  
+    // MERGE DEPENDENCY CONFIG, THIS FORCES OPTIONS INTO THE DEPENDENCY
+    // FROM A HIGHER LEVEL PROJECT
+    _.merge(this.config,depConfig)
     
     // SET THE PROJECT NAME
     this.name = this.config.name || _.last(_.split(path,"/"))
-  
-  
-    log.debug(`Assembling toolchains and build types: ${this.name}`)
-    if (!this.buildTypes.length)
-      configureBuildTypes(this)
-  
-    log.debug(`Loaded project: ${this.name}`)
+    this.android = [true,"true"].includes(this.config.android)
     
+    resolveConfigVariables(this)
+    
+    if (this.android) {
+      log.info("Android mode, will use dynamic toolchain")
+    } else {
+      log.debug(`Assembling toolchains and build types: ${this.name}`)
+      if (!this.buildTypes.length)
+        configureBuildTypes(this)
+      
+      
+    }
+    log.debug(`Loaded project: ${this.name}`)
     Dependency.configureProject(this, isTool)
+    
+    // BUILD TOOLS UP NO MATTER WHAT
     Tool.configureProject(this)
   }
   
@@ -380,4 +224,3 @@ Object.assign(Project, {
   CompilerType
 })
 
-module.exports = Project

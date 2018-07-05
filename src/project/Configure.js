@@ -1,23 +1,26 @@
+
+import {GetLogger} from "../Log" 
+import   {Paths} from "../Config" 
+import   Project from "./Project" 
+import   * as sh from "shelljs"
+import   Fs from 'fs' 
+import   File from "../util/File" 
+import   Assert from "../util/Assert" 
+import   CMakeOptions from "../util/CMakeOptions"
+import   Path from "path" 
+import   OS from 'os' 
+import   Git from "simple-git/promise" 
+import   {getValue} from "typeguard" 
+import   _ from 'lodash' 
+import   {CUnitExtensions} from "../Constants" 
+import   {processTemplate} from "../util/Template" 
+import   Tmp from "tmp"
+import BuildType from "./BuiltType"
+
 const
-  {GetLogger} = require("../Log"),
-  {Paths} = require("../Config"),
-  Project = require("./Project"),
-  sh = require("shelljs"),
-  Fs = require('fs'),
   log = GetLogger(__filename),
-  File = require("../util/File"),
-  Assert = require("../util/Assert"),
-  CMakeOptions = require("../util/CMakeOptions"),
-  ChildProcess = require("child_process"),
-  Path = require("path"),
-  OS = require('os'),
-  Git = require("simple-git/promise"),
-  {getValue} = require("typeguard"),
-  _ = require('lodash'),
-  {CUnitExtensions} = require("../Constants"),
-  {processTemplate} = require("../util/Template"),
-  BuildSteps = ["preconfigure","configure","build","install"],
-  Tmp = require("tmp")
+  BuildSteps = ["preconfigure","configure","build","install"]
+
 
 
 
@@ -92,7 +95,7 @@ function findCUnitConfigFile(path) {
  */
 async function makeCMakeFile(project) {
   const
-    {buildTypes,projectDir,toolsRoot} = project
+    {buildTypes,projectDir,toolsRoot,config,android} = project
   
   
   const
@@ -108,6 +111,7 @@ async function makeCMakeFile(project) {
       toolchain: buildType.toolchain
     })),
     cmakeContext = {
+      android: android === true,
       toolsRoot,
       buildTypes: cmakeBuildTypes,
       buildTypeNames: cmakeBuildTypes.map(buildType => buildType.name).join(";")
@@ -433,9 +437,19 @@ async function configure(argv) {
   log.info(`Building tools first`)
   await buildTools(project)
   
+  // ANDROID CHECK
+  if (project.android) {
+    try {
+      BuildType.makeAndroidBuildType(project, argv)
+    } catch (ex) {
+      log.info("Unable to create android tool chain for android app, returning - config will likely build when you run cmake")
+      console.log(ex)
+    }
+  }
+  
   log.info(`Configuring ${project.name} dependencies`)
   await buildDependencies(project)
-  
+
   
 }
 

@@ -2,42 +2,79 @@
 include(GNUInstallDirs)
 include(CMakeFindDependencyMacro)
 
-# AVAILABLE BUILD TYPES
-set(CMAKE_CONFIGURATION_TYPES "{{buildTypeNames}}" CACHE STRING "" FORCE)
+{{#if android}}
+  execute_process(
+    COMMAND cunit configure
+    --ANDROID_ABI=${ANDROID_ABI}
+    --CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    --CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+     --CMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
+     --ANDROID_NDK=${ANDROID_NDK}
+     --ANDROID_PLATFORM=${ANDROID_PLATFORM}
+     --ANDROID_PIE=${ANDROID_PIE}
+     --ANDROID_STL=${ANDROID_STL}
+     --ANDROID_NATIVE_API_LEVEL=${ANDROID_NATIVE_API_LEVEL}
+    RESULT_VARIABLE CUNIT_ERR
+  )
 
-list(FIND CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_FOUND)
-if(${CMAKE_BUILD_TYPE_FOUND} EQUAL -1)
-  message(FATAL_ERROR "Unknown build type ${CMAKE_BUILD_TYPE}, valid values are: ${CMAKE_CONFIGURATION_TYPES}")
-endif()
+  if (NOT CUNIT_ERR EQUAL 0)
+    message(FATAL_ERROR "CUnit configure failed")
+  endif()
 
+  set(CUNIT_BUILD_TYPE "${ANDROID_ABI}_${CMAKE_BUILD_TYPE}")
+  set(CUNIT_BUILD_DIR "${CMAKE_SOURCE_DIR}/.cunit/${CUNIT_BUILD_TYPE}")
+  set(CUNIT_BUILD_ROOT "${CUNIT_BUILD_DIR}/root")
 
-# GLOBAL BUILD TYPE NAME DECLARATIOn
-{{#each buildTypes}}
-set(BT_{{ nameUpper }} {{ name }})
-{{/each}}
-
-{{#each buildTypes}}
-# BUILD_TYPE {{ name }}
-if(${CMAKE_BUILD_TYPE} STREQUAL "{{ name }}")
-
-  {{#if toolchain.file }}
-  set(CMAKE_TOOLCHAIN_FILE  {{ toolchain.file }})
-  {{/if}}
+  message(STATUS "CUnit build type: ${CUNIT_BUILD_TYPE}")
 
   include_directories(
-      {{rootDir}}/include
+      ${CUNIT_BUILD_ROOT}/include
     BEFORE
   )
 
   link_directories(
-      {{rootDir}}/lib
+    ${CUNIT_BUILD_ROOT}/lib
   )
 
-  list(INSERT CMAKE_MODULE_PATH 0 "{{rootDir}}/lib/cmake")
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "{{rootDir}}/lib/cmake" CACHE STRING "Modules for CMake" FORCE)
-endif()
-{{/each}}
+  list(INSERT CMAKE_MODULE_PATH 0 "${CUNIT_BUILD_ROOT}/lib/cmake")
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CUNIT_BUILD_ROOT}/lib/cmake" CACHE STRING "Modules for CMake" FORCE)
+{{else}}
+  # AVAILABLE BUILD TYPES
+  set(CMAKE_CONFIGURATION_TYPES "{{buildTypeNames}}" CACHE STRING "" FORCE)
 
+  list(FIND CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_FOUND)
+  if(${CMAKE_BUILD_TYPE_FOUND} EQUAL -1)
+    message(FATAL_ERROR "Unknown build type ${CMAKE_BUILD_TYPE}, valid values are: ${CMAKE_CONFIGURATION_TYPES}")
+  endif()
+
+
+  # GLOBAL BUILD TYPE NAME DECLARATIOn
+  {{#each buildTypes}}
+  set(BT_{{ nameUpper }} {{ name }})
+  {{/each}}
+
+  {{#each buildTypes}}
+  # BUILD_TYPE {{ name }}
+  if(${CMAKE_BUILD_TYPE} STREQUAL "{{ name }}")
+
+    {{#if toolchain.file }}
+    set(CMAKE_TOOLCHAIN_FILE  {{ toolchain.file }})
+    {{/if}}
+
+    include_directories(
+        {{rootDir}}/include
+      BEFORE
+    )
+
+    link_directories(
+        {{rootDir}}/lib
+    )
+
+    list(INSERT CMAKE_MODULE_PATH 0 "{{rootDir}}/lib/cmake")
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "{{rootDir}}/lib/cmake" CACHE STRING "Modules for CMake" FORCE)
+  endif()
+  {{/each}}
+{{/if }}
 
 # FIND TOOL IMPL
 macro(find_tool name)

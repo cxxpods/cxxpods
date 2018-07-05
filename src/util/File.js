@@ -57,7 +57,7 @@ function readFileYaml(path) {
 }
 
 function readAsset(assetPath) {
-  return readFile(Path.resolve(__dirname,"..","assets",assetPath))
+  return readFile(Path.resolve(__dirname,"..","..","src","assets",assetPath))
 }
 
 function writeFile(path,content) {

@@ -97,18 +97,31 @@ class Dependency {
       .map(name => new Dependency(project,name,configuredDependencies[name], isTool))
   }
   
+  static updateAllBuildConfigs() {
+    DependencyManager.allDependencies.forEach(it => {
+      log.info(`Updating build config for: ${it.name}, root project has ${it.project.rootProject.buildTypes.length} build types`)
+      it.updateBuildConfigs()
+    })
+  }
+  
   /**
    * Create a dependency instance
    *
    * @param rootProject
    * @param name
-   * @param version
+   * @param versionOrConfig
    * @param isTool
    */
-  constructor(rootProject,name,version, isTool) {
+  constructor(rootProject,name,versionOrConfig, isTool) {
+    const
+      [depConfig,version] = versionOrConfig && typeof versionOrConfig === 'object' ?
+        [versionOrConfig, versionOrConfig.version] :
+        [{}, versionOrConfig]
+      
+    
     
     const
-      Project = require("./Project"),
+      Project = require("./Project").default,
       Tool = require("./Tool")
     
     this.isTool = isTool
@@ -117,22 +130,28 @@ class Dependency {
     this.resolved = false
     this.dir = resolveDependency(name)
     this.rootProject = rootProject
-    this.project = new Project(this.dir, rootProject, isTool)
-    this.buildConfigs = isTool ?
-      // MAKE TOOL BUILD CONFIGS
-      Tool.makeBuildConfigs(rootProject, name) :
-      
-      // NORMAL BUILD CONFIGS
-      rootProject.buildTypes.map(buildType => ({
-        type: buildType,
-        src: `${buildType.dir}/${this.name}-src`,
-        build: `${buildType.dir}/${this.name}-build`,
-      }))
+    this.project = new Project(this.dir, rootProject, isTool, depConfig)
+    this.updateBuildConfigs()
     
     if (isTool)
       Tool.registerTool(this)
     else
       DependencyManager.registerDependency(this)
+  }
+  
+  updateBuildConfigs() {
+    const Tool = require("./Tool")
+    
+    this.buildConfigs = this.isTool ?
+      // MAKE TOOL BUILD CONFIGS
+      Tool.makeBuildConfigs(this.rootProject, this.name) :
+    
+      // NORMAL BUILD CONFIGS
+      this.rootProject.buildTypes.map(buildType => ({
+        type: buildType,
+        src: `${buildType.dir}/${this.name}-src`,
+        build: `${buildType.dir}/${this.name}-build`,
+      }))
   }
   
   toBuildStamp(buildConfig) {

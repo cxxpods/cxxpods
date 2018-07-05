@@ -8,13 +8,15 @@
     "url": "https://github.com/cunit/cunit.git"
   },
   "scripts": {
-    "dev::compile": "mkdir -p dist && npx babel src/ --out-dir dist  --source-maps inline ",
-    "dev::watch": "mkdir -p dist && npx babel src/ --watch --out-dir dist  --source-maps inline"
+    "compile": "mkdir -p dist && npx babel src/ --out-dir dist  --source-maps inline ",
+    "watch": "mkdir -p dist && npx babel src/ --watch --out-dir dist  --source-maps inline",
+    "prepublish": "npm run compile"
   },
   "bin": {
     "cunit": "./bin/cunit.js"
   },
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
     "chalk": "^2.4.1",
     "handlebars": "^4.0.11",
     "js-yaml": "^3.12.0",
@@ -31,6 +33,9 @@
     "@types/handlebars": "^4.0.38",
     "@types/shelljs": "^0.8.0",
     "@types/yargs": "^11.0.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-0": "^6.24.1",
     "npx": "^10.2.0",
     "pkg": "^4.3.3",
     "typescript": "^2.9.2"

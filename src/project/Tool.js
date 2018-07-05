@@ -80,7 +80,7 @@ class Tool {
   }
   
   constructor(rootProject,name,version) {
-    const Project = require("./Project")
+    const Project = require("./Project").default
   
     this.name = name
     this.version = version
