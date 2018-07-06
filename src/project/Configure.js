@@ -187,13 +187,13 @@ async function configureDependency(project,dep,buildConfig) {
     cmakeCmd = `${Paths.CMake} ${cmakeOptions} ${cmakeRoot}`
   
   File.mkdirs(build)
-  sh.cd(build)
+  sh.pushd(build)
   log.info(`Configuring with cmake root: ${cmakeRoot}`)
   log.info(`Using command: ${cmakeCmd}`)
   if (sh.exec(cmakeCmd).code !== 0) {
     throw `CMake config failed`
   }
-  
+  sh.popd()
   log.info(`CMake successfully configured`)
   
 }
@@ -208,26 +208,30 @@ async function configureDependency(project,dep,buildConfig) {
  */
 async function buildDependencyCMake(project,dep,buildConfig) {
   const
-    {name,version} = dep
+    {name,version} = dep,
+    {src,build} = buildConfig
   
   
   
   await configureDependency(project,dep,buildConfig)
   
   // BUILD IT BIGGER
+  sh.pushd(build)
   const makeCmd = `${Paths.Make} -j${OS.cpus().length}`
   log.info(`Making ${name}@${version} with: ${makeCmd}`)
   if (sh.exec(makeCmd).code !== 0) {
     throw `Make failed`
   }
-  
+  sh.popd()
   log.info("Make completed successfully")
   
+  sh.pushd(build)
   const installCmd = `${Paths.Make} -j${OS.cpus().length} install`
   log.info(`Installing ${name}@${version} with: ${installCmd}`)
   if (sh.exec(installCmd).code !== 0) {
     throw `Install failed`
   }
+  sh.popd()
   
   log.info("Installed successfully")
   
@@ -246,8 +250,9 @@ async function buildDependencyManual(project,dep,buildConfig) {
     {dir,name,version,project:{config:{build:buildStepConfigs}}} = dep,
     {type,src:srcDir,build:buildDir} = buildConfig,
     scriptEnv = type.toScriptEnvironment()
-    
   
+  
+  sh.pushd(srcDir)
   BuildSteps.forEach(stepName => {
     const stepConfig = buildStepConfigs[stepName]
     if (!stepConfig || (!stepConfig.script && !stepConfig.file))
@@ -271,16 +276,18 @@ async function buildDependencyManual(project,dep,buildConfig) {
     log.info(`${name} - ${stepName} executing: ${scriptFile}`)
     Assert.ok(File.exists(scriptFile),`Unable to find: ${scriptFile}`)
     Object.assign(sh.env,scriptEnv)
-    sh.cd(srcDir)
+    
     if (sh.exec(scriptFile).code !== 0) {
       throw `An error occurred while executing: ${scriptFile}`
     }
+    
     
     // CLEANUP IF WE USED A TMP OBJECT
     if (tmpFile) {
       tmpFile.removeCallback()
     }
   })
+  sh.popd()
 }
 
 /**

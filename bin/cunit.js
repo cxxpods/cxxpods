@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-
-//require("babel-core/register");
+require("source-map-support").install()
 require("babel-polyfill");
 
 const Path = require("path")

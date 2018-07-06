@@ -1,27 +1,62 @@
-set(CUNIT_CROSS_REQUIRED_VARS CMAKE_C_COMPILER CMAKE_CXX_COMPILER CMAKE_SYSROOT CMAKE_CROSS_PREFIX CMAKE_SYSTEM_NAME CMAKE_SYSTEM_PROCESSOR)
-set(CUNIT_CROSS_OPTIONAL_VARS CMAKE_CROSS_SUFFIX)
+if (NOT CUNIT_TOOLCHAIN_SETUP)
+  set(CUNIT_CROSS_REQUIRED_VARS CMAKE_C_COMPILER CMAKE_CXX_COMPILER CMAKE_SYSROOT CMAKE_SYSTEM_NAME CMAKE_SYSTEM_PROCESSOR CMAKE_CROSS_PREFIX)
+  set(CUNIT_CROSS_OPTIONAL_VARS CMAKE_CROSS_SUFFIX ANDROID_NDK
+    ANDROID_ABI ANDROID_SYSTEM_LIBRARY_PATH ANDROID_PLATFORM
+    ANDROID_COMPILER_FLAGS
+    ANDROID_HEADER_TRIPLE
+    ANDROID_TOOLCHAIN_PREFIX
+    ANDROID_LLVM_TOOLCHAIN_PREFIX
+    ANDROID_C_COMPILER ANDROID_CXX_COMPILER ANDROID_ASM_COMPILER)
 
-function(cunit_toolchain_export)
-  # CHECK REQUIRED VARS
-  foreach(_checkVar ${CUNIT_CROSS_REQUIRED_VARS})
-    if ("${${_checkVar}}" STREQUAL "")
-      message(FATAL_ERROR "CUNIT: ${CUNIT_CROSS_REQUIRED_VARS} are all required to be set for toolchains.  ${CUNIT_CROSS_OPTIONAL_VARS} are optionally suggested")
-    endif()
-  endforeach()
+  # cunit_toolchain_export
+  #
+  # exports the toolchain configuration
+  # to a properties file for use elsewhere
+  function(cunit_toolchain_export)
+    if (NOT CUNIT_TOOLCHAIN_EXPORTED)
 
-  # GET EXPORT FILE
-  set(exportFile $ENV{CUNIT_EXPORT_FILE})
-  if ("${exportFile}" STREQUAL "")
-    message(STATUS "CUNIT: No CUNIT_EXPORT_FILE variable set, not exporting, this is normal for regular builds")
-  else()
+      {{#if android}}
+      set(CMAKE_CROSS_PREFIX ${ANDROID_TOOLCHAIN_PREFIX})
+      {{/if}}
 
-    # EXPORT
-    message(STATUS "CUNIT: Exporting toolchain to ${exportFile}")
-    file(WRITE ${exportFile} "")
-    foreach(_exportVar ${CUNIT_CROSS_REQUIRED_VARS} ${CUNIT_CROSS_OPTIONAL_VARS})
-      if (NOT ${${_exportVar}} STREQUAL "")
-        file(APPEND ${exportFile} "${_exportVar}=${${_exportVar}}\n")
+      # CHECK REQUIRED VARS
+      foreach (_checkVar ${CUNIT_CROSS_REQUIRED_VARS})
+        if ("${${_checkVar}}" STREQUAL "")
+          list(APPEND _missingVars ${_checkVar})
+        endif ()
+      endforeach ()
+
+
+      list(LENGTH _missingVars _missingVarCount)
+      if(NOT ${_missingVarCount} EQUAL 0)
+        # ${CUNIT_CROSS_REQUIRED_VARS}
+        message(FATAL_ERROR "CUNIT: ${_missingVars} are all required to be set for toolchains.  ${CUNIT_CROSS_OPTIONAL_VARS} are optionally suggested")
       endif()
-    endforeach()
-  endif()
-endfunction()
+
+      # GET EXPORT FILE
+      set(exportFile $ENV{CUNIT_EXPORT_FILE})
+      if ("${exportFile}" STREQUAL "")
+        message(STATUS "CUNIT: No CUNIT_EXPORT_FILE variable set, not exporting, this is normal for regular builds")
+      else ()
+
+        # EXPORT
+        message(STATUS "CUNIT: Exporting toolchain to ${exportFile}")
+        file(WRITE ${exportFile} "")
+        foreach (_exportVar ${CUNIT_CROSS_REQUIRED_VARS} ${CUNIT_CROSS_OPTIONAL_VARS})
+          if (NOT ${${_exportVar}} STREQUAL "")
+            file(APPEND ${exportFile} "${_exportVar}=${${_exportVar}}\n")
+          endif ()
+        endforeach ()
+      endif ()
+      set(CUNIT_TOOLCHAIN_EXPORTED TRUE)
+    endif ()
+  endfunction()
+
+  set(CUNIT_TOOLCHAIN_SETUP TRUE)
+
+  {{#if toolchainFile}}
+    include({{toolchainFile}})
+    cunit_toolchain_export()
+  {{/if}}
+endif ()
+
