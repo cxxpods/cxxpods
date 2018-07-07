@@ -84,13 +84,23 @@ export default class Toolchain {
    * @returns {*}
    */
   toSystemOverrides(rootProject,project,propertyPath) {
+    
+    function getProp(o) {
+      const parts = propertyPath.split('.')
+      
+      for (let part of parts) {
+        o = !o ? null : o[part]
+      }
+      
+      return o
+    }
     const
       system = this.triplet.system.toLowerCase(),
       rootProjectOverrides = getValue(() => rootProject.config.dependencies[project.name]),
       allOverrides = [
-        getValue(() => _.get(project.config.systems[system],propertyPath), null),
-        getValue(() => _.get(rootProjectOverrides,propertyPath),null),
-        getValue(() => _.get(rootProjectOverrides.systems[system],propertyPath), null)]
+        getValue(() => getProp(project.config.systems[system]), null),
+        getValue(() => getProp(rootProjectOverrides),null),
+        getValue(() => getProp(rootProjectOverrides.systems[system]), null)]
     
     return allOverrides
       .filter(it => it !== null)
