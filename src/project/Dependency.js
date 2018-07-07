@@ -149,6 +149,7 @@ class Dependency {
     const Tool = require("./Tool").default
     
     this.buildConfigs = this.isTool ?
+      
       // MAKE TOOL BUILD CONFIGS
       Tool.makeBuildConfigs(this.rootProject, this.name) :
     

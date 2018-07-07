@@ -75,8 +75,28 @@ export default class Toolchain {
     }
   }
   
+  /**
+   * Calculate system overrides
+   *
+   * @param rootProject - project being built
+   * @param project - current dependency
+   * @param propertyPath - property make i.e. "cmake.options"
+   * @returns {*}
+   */
+  toSystemOverrides(rootProject,project,propertyPath) {
+    const
+      system = this.triplet.system.toLowerCase(),
+      rootProjectOverrides = getValue(() => rootProject.config.dependencies[project.name]),
+      allOverrides = [
+        getValue(() => _.get(project.config.systems[system],propertyPath), null),
+        getValue(() => _.get(rootProjectOverrides,propertyPath),null),
+        getValue(() => _.get(rootProjectOverrides.systems[system],propertyPath), null)]
+    
+    return allOverrides
+      .filter(it => it !== null)
+      .reduce((overrideOpts,nextOverrideOpts) => Object.assign(overrideOpts,nextOverrideOpts),{})
   
-  
+  }
   
   /**
    * Create toolchain environment config
@@ -85,9 +105,12 @@ export default class Toolchain {
    * @returns {*}
    */
   toScriptEnvironment(rootProject,project) {
+    // GET SYSTEM OVERRIDES
+    const props = this.toSystemOverrides(rootProject,project,'build.options')
     if (!this.file)
-      return {}
+      return props
     
+    // RUN TOOLCHAIN EXPORT SCRIPT
     // noinspection JSCheckFunctionSignatures
     const
       outputFile = `${sh.tempdir()}/toolchain.properties`,
@@ -109,8 +132,9 @@ export default class Toolchain {
     
     sh.env["CUNIT_EXPORT_FILE"] = null
     
-    const
-      props = File.readFileProperties(outputFile)
+    
+    // ASSIGN TO EXPORT PROPS
+    Object.assign(props, File.readFileProperties(outputFile))
     
     const
       makeCrossTool = (name,optional = false) => {
@@ -173,16 +197,7 @@ export default class Toolchain {
     
     // GET ALL TOP LEVEL & SYSTEM OVERRIDES
     const
-      system = this.triplet.system.toLowerCase(),
-      rootProjectOverrides = getValue(() => rootProject.config.dependencies[project.name]),
-      allOverrides = [
-        getValue(() => project.config.systems[system].cmake.flags, null),
-        getValue(() => rootProjectOverrides.cmake.flags,null),
-        getValue(() => rootProjectOverrides.systems[system].cmake.flags, null)],
-      overrideOpts = allOverrides
-        .filter(it => it !== null)
-        .reduce((overrideOpts,nextOverrideOpts) => Object.assign(overrideOpts,nextOverrideOpts),{})
-  
+      overrideOpts = this.toSystemOverrides(rootProject,project,'cmake.flags')
     // MERGE EVERYTHING TOGETHER
     return Object.assign(opts,overrideOpts)
   }
