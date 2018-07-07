@@ -1,5 +1,6 @@
+import GetLogger from '../Log'
+
 const
-  {GetLogger} = require("../Log"),
   {resolveDependency} = require("../repo/Repo"),
   sh = require("shelljs"),
   OS = require("os"),
@@ -118,11 +119,16 @@ class Dependency {
         [versionOrConfig, versionOrConfig.version] :
         [{}, versionOrConfig]
       
+    let realRootProject = rootProject
+    while(realRootProject.rootProject) {
+      realRootProject = realRootProject.rootProject
+    }
     
+    rootProject = realRootProject
     
     const
       Project = require("./Project").default,
-      Tool = require("./Tool")
+      Tool = require("./Tool").default
     
     this.isTool = isTool
     this.name = name
@@ -140,7 +146,7 @@ class Dependency {
   }
   
   updateBuildConfigs() {
-    const Tool = require("./Tool")
+    const Tool = require("./Tool").default
     
     this.buildConfigs = this.isTool ?
       // MAKE TOOL BUILD CONFIGS
@@ -166,12 +172,8 @@ class Dependency {
       },
       buildType: buildConfig.type.toBuildStamp(),
       cmakeConfig,
-      cmakeFindTemplateTimestamp: cmakeConfig.findTemplate ?
-        File.getFileModifiedTimestamp(`${this.dir}/${cmakeConfig.findTemplate}`) :
-        0,
-      cmakeToolTemplateTimestamp: cmakeConfig.toolTemplate ?
-        File.getFileModifiedTimestamp(`${this.dir}/${cmakeConfig.toolTemplate}`) :
-        0
+      srcTimestamp: File.getFileModifiedTimestamp(buildConfig.src),
+      dirTimestamp: File.getFileModifiedTimestamp(this.dir)
     }
   }
   

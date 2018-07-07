@@ -1,9 +1,11 @@
 import Toolchain from "./Toolchain"
 import BuildType from "./BuiltType"
 import {CompilerType, Processor, ProcessorNodeMap, System} from "./BuildConstants"
+import GetLogger from '../Log'
+import Tool from './Tool'
+import {getValue} from "typeguard"
 
 const
-  {GetLogger} = require("../Log"),
   sh = require("shelljs"),
   OS = require("os"),
   log = GetLogger(__filename),
@@ -11,8 +13,8 @@ const
   File = require("../util/File"),
   Assert = require("../util/Assert"),
   _ = require('lodash'),
-  {Dependency,DependencyManager} = require("./Dependency"),
-  Tool = require("./Tool")
+  {Dependency,DependencyManager} = require("./Dependency")
+  
 
 
 
@@ -78,11 +80,12 @@ const HostToolchain = Toolchain.makeHostToolchain(HostTriplet)
  */
 function configureBuildTypes(project) {
   const
-    {config,toolchains,android} = project,
+    {config} = project,
+    {toolchains,android} = project.rootProject || project,
     profiles = android ? [] : config.profiles ? config.profiles : ['Debug', 'Release']
   
   if (toolchains.length === 0) {
-    if (config.toolchainExcludeHost !== true) {
+    if (!android && config.toolchainExcludeHost !== true) {
       toolchains.push(HostToolchain)
     }
   
@@ -132,6 +135,14 @@ function resolveConfigVariables(project,context = null, processedConfigs = []) {
  */
 export default class Project {
   constructor(path = sh.pwd(), rootProject = null, isTool = false, depConfig = {}) {
+  
+    let realRootProject = rootProject
+    while(realRootProject && realRootProject.rootProject) {
+      realRootProject = realRootProject.rootProject
+    }
+  
+    rootProject = realRootProject
+    
     this.rootProject = rootProject
     this.projectDir = path
     
@@ -167,7 +178,7 @@ export default class Project {
     
     // SET THE PROJECT NAME
     this.name = this.config.name || _.last(_.split(path,"/"))
-    this.android = [true,"true"].includes(this.config.android)
+    this.android = [true,"true"].includes(getValue(() => this.rootProject.config,this.config).android)
     
     resolveConfigVariables(this)
     
@@ -177,14 +188,15 @@ export default class Project {
       log.debug(`Assembling toolchains and build types: ${this.name}`)
       if (!this.buildTypes.length)
         configureBuildTypes(this)
-      
-      
     }
-    log.debug(`Loaded project: ${this.name}`)
+    
+    // CONFIGURE DEPENDENCIES
     Dependency.configureProject(this, isTool)
     
     // BUILD TOOLS UP NO MATTER WHAT
     Tool.configureProject(this)
+  
+    log.debug(`Loaded project: ${this.name}`)
   }
   
   loadConfigFile(path) {

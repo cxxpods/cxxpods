@@ -5,7 +5,7 @@ import Toolchain from "./Toolchain"
 import {Dependency,DependencyManager} from "./Dependency"
 import {Triplet} from "./Project"
 import File from "../util/File"
-import {GetLogger} from "../Log"
+import GetLogger from "../Log"
 
 const log = GetLogger(__filename)
 
@@ -81,7 +81,11 @@ export default class BuildType {
     this.isTool = isTool
     this.profile = profile
     this.toolchain = toolchain
-    this.dir = isTool ? project.toolsDir : `${project.projectDir}/.cunit/${this.toString()}`
+    
+    const
+      rootProject = project.rootProject || project
+    
+    this.dir = isTool ? project.toolsDir : `${rootProject.projectDir}/.cunit/${this.toString()}`
     this.rootDir = isTool ? project.toolsRoot : `${this.dir}/root`
     
     File.mkdirs(this.rootDir)
@@ -91,10 +95,10 @@ export default class BuildType {
     return `${this.toolchain.toString()}_${this.profile.toLowerCase()}`
   }
   
-  toScriptEnvironment() {
+  toScriptEnvironment(rootProject,project) {
     return _.merge(
       {},
-      this.toolchain.toScriptEnvironment(),
+      this.toolchain.toScriptEnvironment(rootProject,project),
       {
         CUNIT_BUILD_ROOT: this.rootDir,
         CUNIT_BUILD_LIB: `${this.rootDir}/lib`,
@@ -103,9 +107,9 @@ export default class BuildType {
       })
   }
   
-  toCMakeOptions() {
+  toCMakeOptions(rootProject,project) {
     return _.merge({},
-      this.toolchain.toCMakeOptions(),
+      this.toolchain.toCMakeOptions(rootProject,project),
       {
         CMAKE_INSTALL_PREFIX: this.rootDir,
         CMAKE_MODULE_PATH: `${this.rootDir}/lib/cmake`,

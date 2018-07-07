@@ -2,7 +2,7 @@
 import {configure,makeCMakeFile} from "../project/Configure"
 import Project from "../project/Project"
 import {DependencyManager} from "../project/Dependency"
-import {GetLogger} from "../Log"
+import GetLogger from "../Log"
 import {AndroidArgs} from "../project/BuiltType"
 
 const

@@ -2,7 +2,7 @@
 import File from '../util/File'
 import * as sh from "shelljs"
 import Assert from 'assert'
-import {GetLogger} from '../Log'
+import GetLogger from '../Log'
 import {Paths} from "../Config"
 import * as Tmp from 'tmp'
 import {processTemplate} from "../util/Template"
@@ -63,7 +63,11 @@ export default class Toolchain {
   }
   
   
-  
+  /**
+   * Build stamping for caching purposes
+   *
+   * @returns {{triplet: string, file: *}}
+   */
   toBuildStamp() {
     return {
       triplet: this.triplet.toString(),
@@ -80,7 +84,7 @@ export default class Toolchain {
    *
    * @returns {*}
    */
-  toScriptEnvironment() {
+  toScriptEnvironment(rootProject,project) {
     if (!this.file)
       return {}
     
@@ -144,18 +148,50 @@ export default class Toolchain {
   /**
    * Create CMake command line options
    */
-  toCMakeOptions() {
+  toCMakeOptions(rootProject,project) {
     const opts = {}
+    
     if (this.androidOpts) {
-     Object.assign(opts,this.androidOpts)
+      Object.assign(opts,this.androidOpts, { ANDROID: "ON" })
     } else if (this.file) {
       opts["CMAKE_TOOLCHAIN_FILE"] =this.file
     }
     
+    // SYSROOT IF POSSIBLE
+    const androidNdk = opts.ANDROID_NDK
+    let sysroot = opts.CMAKE_SYSROOT || opts.SYSROOT
+    if (!sysroot && androidNdk) {
+      sysroot = `${androidNdk}/sysroot`
+    }
     
-    return opts
+    if (sysroot) {
+      Object.assign(opts,{
+        SYSROOT: sysroot,
+        CMAKE_SYSROOT: sysroot
+      })
+    }
+    
+    // GET ALL TOP LEVEL & SYSTEM OVERRIDES
+    const
+      system = this.triplet.system.toLowerCase(),
+      rootProjectOverrides = getValue(() => rootProject.config.dependencies[project.name]),
+      allOverrides = [
+        getValue(() => project.config.systems[system].cmake.flags, null),
+        getValue(() => rootProjectOverrides.cmake.flags,null),
+        getValue(() => rootProjectOverrides.systems[system].cmake.flags, null)],
+      overrideOpts = allOverrides
+        .filter(it => it !== null)
+        .reduce((overrideOpts,nextOverrideOpts) => Object.assign(overrideOpts,nextOverrideOpts),{})
+  
+    // MERGE EVERYTHING TOGETHER
+    return Object.assign(opts,overrideOpts)
   }
   
+  /**
+   * toString() is either an explicit name or triplet name
+   *
+   * @returns {*|string}
+   */
   toString() {
     return this.name || this.triplet.toString()
   }

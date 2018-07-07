@@ -1,27 +1,25 @@
-
-import {GetLogger} from "../Log" 
-import   {Paths} from "../Config" 
-import   Project from "./Project" 
-import   * as sh from "shelljs"
-import   Fs from 'fs' 
-import   File from "../util/File" 
-import   Assert from "../util/Assert" 
-import   CMakeOptions from "../util/CMakeOptions"
-import   Path from "path" 
-import   OS from 'os' 
-import   Git from "simple-git/promise" 
-import   {getValue} from "typeguard" 
-import   _ from 'lodash' 
-import   {CUnitExtensions} from "../Constants" 
-import   {processTemplate} from "../util/Template" 
-import   Tmp from "tmp"
+import GetLogger from "../Log"
+import {Paths} from "../Config"
+import Project from "./Project"
+import * as sh from "shelljs"
+import Fs from 'fs'
+import File from "../util/File"
+import Assert from "../util/Assert"
+import CMakeOptions from "../util/CMakeOptions"
+import Path from "path"
+import OS from 'os'
+import Git from "simple-git/promise"
+import {getValue} from "typeguard"
+import _ from 'lodash'
+import {CUnitExtensions} from "../Constants"
+import {processTemplate} from "../util/Template"
+import Tmp from "tmp"
 import BuildType from "./BuiltType"
+import {printObject} from "../util/Debug"
 
 const
   log = GetLogger(__filename),
-  BuildSteps = ["preconfigure","configure","build","install"]
-
-
+  BuildSteps = ["preconfigure", "configure", "build", "install"]
 
 
 /**
@@ -32,11 +30,11 @@ const
  * @param buildConfig
  * @returns {Promise<void>}
  */
-async function checkoutDependencyAndUpdateSource(project,dep,buildConfig) {
+async function checkoutDependencyAndUpdateSource(project, dep, buildConfig) {
   const
-    {name,version} = dep,
-    {src,type} = buildConfig,
-    {url} = getValue(() => dep.project.config.repository,{})
+    {name, version} = dep,
+    {src, type} = buildConfig,
+    {url} = getValue(() => dep.project.config.repository, {})
   
   if (!File.isDirectory(src)) {
     const parent = Path.dirname(src)
@@ -44,7 +42,7 @@ async function checkoutDependencyAndUpdateSource(project,dep,buildConfig) {
     File.mkdirs(parent)
     
     const git = Git(parent)
-    await git.clone(url,src,{
+    await git.clone(url, src, {
       "--depth": "1",
       "--recurse-submodules": null
     })
@@ -57,7 +55,7 @@ async function checkoutDependencyAndUpdateSource(project,dep,buildConfig) {
     remote = remotes[0].name
   
   // noinspection JSCheckFunctionSignatures
-  await git.raw(['fetch','--all','--tags','--prune'])
+  await git.raw(['fetch', '--all', '--tags', '--prune'])
   
   // noinspection JSCheckFunctionSignatures
   const
@@ -80,11 +78,11 @@ async function checkoutDependencyAndUpdateSource(project,dep,buildConfig) {
  * Find a cunit config file
  *
  * @param path
+ * @param name
  */
-function findCUnitConfigFile(path) {
-  return CUnitExtensions.map(ext => `${path}/cunit${ext}`).find(filename => Fs.existsSync(filename))
+export function findCUnitConfigFile(path, name = 'cunit') {
+  return CUnitExtensions.map(ext => `${path}/${name}${ext}`).find(filename => Fs.existsSync(filename))
 }
-
 
 
 /**
@@ -93,9 +91,9 @@ function findCUnitConfigFile(path) {
  * @param project
  * @returns {Promise<void>}
  */
-async function makeCMakeFile(project) {
+export async function makeCMakeFile(project) {
   const
-    {buildTypes,projectDir,toolsRoot,config,android} = project
+    {buildTypes, projectDir, toolsRoot, config, android} = project
   
   
   const
@@ -105,8 +103,8 @@ async function makeCMakeFile(project) {
     
     cmakeBuildTypes = buildTypes.map(buildType => ({
       ...buildType,
-      name: buildType.name.replace(/-/g,"_").toLowerCase(),
-      nameUpper: buildType.name.replace(/-/g,"_").toUpperCase(),
+      name: buildType.name.replace(/-/g, "_").toLowerCase(),
+      nameUpper: buildType.name.replace(/-/g, "_").toUpperCase(),
       rootDir: buildType.rootDir,
       toolchain: buildType.toolchain
     })),
@@ -119,10 +117,10 @@ async function makeCMakeFile(project) {
   
   File.mkdirs(cmakeOutputDir)
   log.info(`Writing CMake file: ${cmakeOutputFile}`)
-  processTemplate(File.readAsset("cunit.cmake.hbs"),cmakeContext,cmakeOutputFile)
+  processTemplate(File.readAsset("cunit.cmake.hbs"), cmakeContext, cmakeOutputFile)
   
   log.info(`Writing CMake Toolchain file: ${cmakeOutputToolchainFile}`)
-  processTemplate(File.readAsset("cunit.toolchain.cmake.hbs"),cmakeContext,cmakeOutputToolchainFile)
+  processTemplate(File.readAsset("cunit.toolchain.cmake.hbs"), cmakeContext, cmakeOutputToolchainFile)
 }
 
 
@@ -133,9 +131,9 @@ async function makeCMakeFile(project) {
  * @param buildConfig
  * @returns {Promise<void>}
  */
-async function makeDependencyCMakeFile(project,buildConfig) {
+async function makeDependencyCMakeFile(project, buildConfig) {
   const
-    {src,type:buildType} = buildConfig,
+    {src, type: buildType} = buildConfig,
     configFile = findCUnitConfigFile(src),
     {toolsRoot} = project
   
@@ -148,8 +146,8 @@ async function makeDependencyCMakeFile(project,buildConfig) {
     cmakeOutputFile = `${cmakeOutputDir}/cunit.cmake`,
     cmakeContext = {
       ...buildType,
-      name: buildType.name.replace(/-/g,"_").toLowerCase(),
-      nameUpper: buildType.name.replace(/-/g,"_").toUpperCase(),
+      name: buildType.name.replace(/-/g, "_").toLowerCase(),
+      nameUpper: buildType.name.replace(/-/g, "_").toUpperCase(),
       rootDir: buildType.rootDir,
       toolsRoot,
       toolchain: buildType.toolchain
@@ -157,7 +155,7 @@ async function makeDependencyCMakeFile(project,buildConfig) {
   
   log.info(`Writing CMake file: ${cmakeOutputFile}`)
   File.mkdirs(cmakeOutputDir)
-  processTemplate(File.readAsset("cunit.dep.cmake.hbs"),cmakeContext,cmakeOutputFile)
+  processTemplate(File.readAsset("cunit.dep.cmake.hbs"), cmakeContext, cmakeOutputFile)
 }
 
 /**
@@ -168,23 +166,27 @@ async function makeDependencyCMakeFile(project,buildConfig) {
  * @param buildConfig
  * @returns {Promise<void>}
  */
-async function configureDependency(project,dep,buildConfig) {
+async function configureDependency(project, dep, buildConfig) {
   const
-    {src,build,type} = buildConfig
+    {src, build, type} = buildConfig
   
   // MAKE CUNIT CMAKE FILE IF REQUIRED
-  await makeDependencyCMakeFile(project,buildConfig)
+  await makeDependencyCMakeFile(project, buildConfig)
   
   // NOW CONFIGURE THE BUILD
   const
-    cmakeConfig = getValue(() => dep.project.config.cmake,{}),
-    cmakeRoot = Path.resolve(src,cmakeConfig.root || ""),
-    cmakeFlags = getValue(() => cmakeConfig.flags,{}),
-    cmakeOptions = new CMakeOptions(_.merge(
+    cmakeConfig = getValue(() => dep.project.config.cmake, {}),
+    cmakeRoot = Path.resolve(src, cmakeConfig.root || ""),
+    cmakeFlags = getValue(() => cmakeConfig.flags, {}),
+    cmakeOptionsObj = _.merge(
       {},
       cmakeFlags,
-      type.toCMakeOptions())),
+      type.toCMakeOptions(project,dep.project)),
+    cmakeOptions = new CMakeOptions(cmakeOptionsObj),
     cmakeCmd = `${Paths.CMake} ${cmakeOptions} ${cmakeRoot}`
+  
+  
+  printObject(cmakeOptionsObj, `CMake Option (${dep.name})\t`)
   
   File.mkdirs(build)
   sh.pushd(build)
@@ -206,14 +208,13 @@ async function configureDependency(project,dep,buildConfig) {
  * @param buildConfig
  * @returns {Promise<void>}
  */
-async function buildDependencyCMake(project,dep,buildConfig) {
+async function buildDependencyCMake(project, dep, buildConfig) {
   const
-    {name,version} = dep,
-    {src,build} = buildConfig
+    {name, version} = dep,
+    {src, build} = buildConfig
   
   
-  
-  await configureDependency(project,dep,buildConfig)
+  await configureDependency(project, dep, buildConfig)
   
   // BUILD IT BIGGER
   sh.pushd(build)
@@ -245,10 +246,10 @@ async function buildDependencyCMake(project,dep,buildConfig) {
  * @param buildConfig
  * @returns {Promise<void>}
  */
-async function buildDependencyManual(project,dep,buildConfig) {
+async function buildDependencyManual(project, dep, buildConfig) {
   const
-    {dir,name,version,project:{config:{build:buildStepConfigs}}} = dep,
-    {type,src:srcDir,build:buildDir} = buildConfig,
+    {dir, name, version, project: {config: {build: buildStepConfigs}}} = dep,
+    {type, src: srcDir, build: buildDir} = buildConfig,
     scriptEnv = type.toScriptEnvironment()
   
   
@@ -268,14 +269,14 @@ async function buildDependencyManual(project,dep,buildConfig) {
       tmpFile = Tmp.fileSync({mode: 777, prefix: `${name}-${stepName}-`, postfix: '.sh'})
       sh.exec(`chmod 777 ${tmpFile.name}`)
       scriptFile = tmpFile.name
-      File.writeFile(scriptFile,`#!/bin/bash -e \n\n${stepConfig.script}`)
+      File.writeFile(scriptFile, `#!/bin/bash -e \n\n${stepConfig.script}`)
     } else {
       scriptFile = `${dir}/${stepConfig.file}`
     }
-  
+    
     log.info(`${name} - ${stepName} executing: ${scriptFile}`)
-    Assert.ok(File.exists(scriptFile),`Unable to find: ${scriptFile}`)
-    Object.assign(sh.env,scriptEnv)
+    Assert.ok(File.exists(scriptFile), `Unable to find: ${scriptFile}`)
+    Object.assign(sh.env, scriptEnv)
     
     if (sh.exec(scriptFile).code !== 0) {
       throw `An error occurred while executing: ${scriptFile}`
@@ -297,7 +298,7 @@ async function buildDependencyManual(project,dep,buildConfig) {
  * @param dep
  * @return {boolean}
  */
-function hasDependencyChanged(dep,buildConfig) {
+function hasDependencyChanged(dep, buildConfig) {
   const
     buildStampFile = `${buildConfig.build}/.cunit-build-stamp`,
     exists = File.exists(buildStampFile),
@@ -315,10 +316,10 @@ function hasDependencyChanged(dep,buildConfig) {
  * @param buildConfig
  * @returns {Promise<void>}
  */
-async function buildDependency(project,dep,buildConfig) {
+async function buildDependency(project, dep, buildConfig) {
   const
-    {name,version,project:{config:{buildType = "cmake"}}} = dep,
-    changed = hasDependencyChanged(dep,buildConfig)
+    {name, version, project: {config: {buildType = "cmake"}}} = dep,
+    changed = hasDependencyChanged(dep, buildConfig)
   
   if (!changed) {
     log.info(`${buildConfig.type}: Dependency ${name}@${version} has not changed, skipping`)
@@ -326,19 +327,19 @@ async function buildDependency(project,dep,buildConfig) {
   }
   
   // CHECKOUT+UPDATE DEPENDENCY SOURCE
-  await checkoutDependencyAndUpdateSource(project,dep,buildConfig)
+  await checkoutDependencyAndUpdateSource(project, dep, buildConfig)
   
   
   switch (buildType) {
     case "manual":
-      await buildDependencyManual(project,dep,buildConfig)
+      await buildDependencyManual(project, dep, buildConfig)
       break;
     default:
-      await buildDependencyCMake(project,dep,buildConfig)
+      await buildDependencyCMake(project, dep, buildConfig)
       break;
   }
   
-  postDependencyInstall(project,dep,buildConfig)
+  postDependencyInstall(project, dep, buildConfig)
 }
 
 /**
@@ -350,10 +351,10 @@ async function buildDependency(project,dep,buildConfig) {
  */
 function postDependencyInstall(project, dep, buildConfig) {
   const
-    {type,build:buildDir} = buildConfig,
+    {type, build: buildDir} = buildConfig,
     rootDir = type.rootDir,
-    cmakeConfig = getValue(() => dep.project.config.cmake,{}),
-    {findTemplate:cmakeFindTemplate,toolTemplate:cmakeToolTemplate} = cmakeConfig,
+    cmakeConfig = getValue(() => dep.project.config.cmake, {}),
+    {findTemplate: cmakeFindTemplate, toolTemplate: cmakeToolTemplate} = cmakeConfig,
     
     cmakeContext = {
       cunitRootDir: rootDir,
@@ -365,24 +366,24 @@ function postDependencyInstall(project, dep, buildConfig) {
     processCMakeTemplate = (cmakeTemplate) => {
       const
         templatePath = `${dep.dir}/${cmakeTemplate}`,
-        findFilename = `${rootDir}/lib/cmake/${_.last(_.split(cmakeTemplate,"/")).replace(/\.hbs$/,"")}`
-    
+        findFilename = `${rootDir}/lib/cmake/${_.last(_.split(cmakeTemplate, "/")).replace(/\.hbs$/, "")}`
+      
       log.info(`Writing file: ${findFilename}`)
       File.mkdirParents(findFilename)
-    
-      processTemplate(File.readFile(templatePath),cmakeContext,findFilename)
+      
+      processTemplate(File.readFile(templatePath), cmakeContext, findFilename)
     }
   
   
-  [cmakeFindTemplate,cmakeToolTemplate]
+  [cmakeFindTemplate, cmakeToolTemplate]
     .filter(it => !_.isEmpty(it))
     .forEach(processCMakeTemplate)
-    
+  
   // Write the build stamp at the very end
-  writeDependencyBuildStamp(dep,buildConfig)
+  writeDependencyBuildStamp(dep, buildConfig)
 }
 
-function writeDependencyBuildStamp(dep,buildConfig) {
+function writeDependencyBuildStamp(dep, buildConfig) {
   const buildStampFile = `${buildConfig.build}/.cunit-build-stamp`
   File.mkdirParents(buildStampFile)
   File.writeFileJSON(buildStampFile, dep.toBuildStamp(buildConfig))
@@ -398,8 +399,8 @@ async function buildTools(project) {
   
   for (let dep of toolDependencyGraph) {
     log.info(`\t${dep.name}@${dep.version}`)
-  
-    await buildDependency(project,dep,dep.buildConfigs[0])
+    
+    await buildDependency(project, dep, dep.buildConfigs[0])
   }
 }
 
@@ -414,7 +415,7 @@ async function buildDependencies(project) {
     log.info(`\t${dep.name}@${dep.version}`)
     
     for (let buildConfig of dep.buildConfigs) {
-      await buildDependency(project,dep,buildConfig)
+      await buildDependency(project, dep, buildConfig)
     }
   }
 }
@@ -434,7 +435,7 @@ function loadProject(path = sh.pwd()) {
  *
  * @param argv
  */
-async function configure(argv) {
+export async function configure(argv) {
   const
     project = loadProject()
   
@@ -456,13 +457,4 @@ async function configure(argv) {
   
   log.info(`Configuring ${project.name} dependencies`)
   await buildDependencies(project)
-
-  
-}
-
-
-module.exports = {
-  configure,
-  findCUnitConfigFile,
-  makeCMakeFile
 }

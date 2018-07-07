@@ -68,8 +68,20 @@ function writeFileJSON(path,obj) {
   Fs.writeFileSync(path,JSON.stringify(obj),'utf-8')
 }
 
-function getFileModifiedTimestamp(path) {
-  return Fs.statSync(path).mtimeMs
+function getFileModifiedTimestamp(path, timestamp = 0) {
+  if (!exists(path))
+    return timestamp
+  
+  if (!isDirectory(path)) {
+    return Math.max(Fs.statSync(path).mtimeMs, timestamp)
+  } else {
+    Fs.readdirSync(path)
+      .filter(it => !it.startsWith("."))
+      .forEach(it => {
+        timestamp = Math.max(timestamp, getFileModifiedTimestamp(`${path}/${it}`, timestamp))
+      })
+  }
+  return timestamp
 }
 
 module.exports = {

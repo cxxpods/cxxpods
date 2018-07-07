@@ -1,6 +1,6 @@
 
 import * as Repo from './repo/Repo'
-import {GetLogger} from './Log'
+import GetLogger from './Log'
 
 const
   log = GetLogger(__filename)

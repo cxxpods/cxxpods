@@ -1,12 +1,11 @@
+import GetLogger from "../Log"
+import {Config,Paths} from "../Config"
+import * as File from "../util/File"
+import * as Fs from 'fs'
+import * as sh from 'shelljs'
+import * as _ from 'lodash'
+import * as Git from 'simple-git/promise'
 
-const
-  {Config,Paths} = require("../Config"),
-  {GetLogger} = require("../Log"),
-  File = require("../util/File"),
-  Fs = require('fs'),
-  sh = require("shelljs"),
-  _ = require('lodash'),
-  Git = require('simple-git/promise')
 
 const log = GetLogger(__filename)
 

@@ -1,5 +1,6 @@
+import GetLogger from '../Log'
+
 const
-  {GetLogger} = require("../Log"),
   {resolveDependency} = require("../repo/Repo"),
   sh = require("shelljs"),
   OS = require("os"),
@@ -9,7 +10,7 @@ const
   SemVer = require("semver"),
   allTools = []
 
-class Tool {
+export default class Tool {
   
   /**
    * Configure all the tools for a project
@@ -115,4 +116,3 @@ class Tool {
 }
 
 
-module.exports = Tool
