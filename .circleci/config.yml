@@ -6,22 +6,19 @@ defaults: &defaults
     - image: circleci/node:10.6.0
 
 jobs:
-  test:
+  build:
     <<: *defaults
     steps:
       - checkout
-
       - restore_cache:
           keys:
           - v1-dependencies-
           - v1-dependencies-
-
       - run: npm install
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-
-
       - persist_to_workspace:
           root: ~/repo
           paths: .
@@ -41,7 +38,7 @@ workflows:
   version: 2
   test-deploy:
     jobs:
-      - test:
+      - build:
           filters:
             tags:
               only: /^v.*/
