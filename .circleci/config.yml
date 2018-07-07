@@ -22,6 +22,14 @@ jobs:
       - persist_to_workspace:
           root: ~/repo
           paths: .
+  test:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: test
+          command: npm test
   deploy:
     <<: *defaults
     steps:
