@@ -6,34 +6,34 @@ const
   sh = require('shelljs'),
   _ = require("lodash")
 
-function exists(path) {
+export function exists(path) {
   return sh.test('-f',path)
 }
 
-function isDirectory(path) {
+export function isDirectory(path) {
   return sh.test('-d', path)
 }
 
-function mkdirs(path) {
+export function mkdirs(path) {
   sh.mkdir('-p',path)
   return isDirectory(path)
 }
 
-function mkdirParents(path) {
+export function mkdirParents(path) {
   const parts = _.split(path,"/")
   parts.pop()
   const parentPath = parts.join("/")
   return mkdirs(parentPath)
 }
 
-function readFile(path) {
+export function readFile(path) {
   if (!exists(path))
     throw `Unable to find: ${path}`
   
   return Fs.readFileSync(path,'utf-8')
 }
 
-function readFileProperties(path) {
+export function readFileProperties(path) {
   const content = readFile(path)
   
   return _.split(content,"\n")
@@ -48,27 +48,27 @@ function readFileProperties(path) {
     },{})
 }
 
-function readFileJson(path) {
+export function readFileJson(path) {
   return JSON.parse(readFile(path))
 }
 
-function readFileYaml(path) {
+export function readFileYaml(path) {
   return Yaml.safeLoad(readFile(path))
 }
 
-function readAsset(assetPath) {
+export function readAsset(assetPath) {
   return readFile(Path.resolve(__dirname,"..","..","src","assets",assetPath))
 }
 
-function writeFile(path,content) {
+export function writeFile(path,content) {
   Fs.writeFileSync(path,content,'utf-8')
 }
 
-function writeFileJSON(path,obj) {
+export function writeFileJSON(path,obj) {
   Fs.writeFileSync(path,JSON.stringify(obj),'utf-8')
 }
 
-function getFileModifiedTimestamp(path, timestamp = 0) {
+export function getFileModifiedTimestamp(path, timestamp = 0) {
   if (!exists(path))
     return timestamp
   
@@ -84,7 +84,7 @@ function getFileModifiedTimestamp(path, timestamp = 0) {
   return timestamp
 }
 
-module.exports = {
+export default {
   exists,
   isDirectory,
   mkdirs,
