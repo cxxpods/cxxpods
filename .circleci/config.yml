@@ -12,7 +12,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - v1-dependencies-
+          - v1-dependencies-{{ checksum "package.json" }}
           - v1-dependencies-
       - run: npm install
       - save_cache:
@@ -47,6 +47,8 @@ workflows:
   test-deploy:
     jobs:
       - test:
+          requires:
+            - build
           filters:
             tags:
               only: /^v.*/
