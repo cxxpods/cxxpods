@@ -14,14 +14,9 @@ jobs:
       - restore_cache:
           keys:
           - v1-dependencies-
-	      # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
       - run: npm install
-      #      - run:
-      #          name: Run tests
-      #          command: npm test
-
       - save_cache:
           paths:
             - node_modules
