@@ -7,8 +7,10 @@ const
 const
   sh = require("shelljs"),
   Home = process.env.HOME,
+  IsWindows = OS.platform().startsWith("win"),
+  Exe = IsWindows ? '.exe' : '',
   [CMake,Make,Git] = ["cmake","make","git"].map(app => {
-    const path = sh.which(app)
+    const path = sh.which(`${app}${Exe}`)
     if (!path || _.isEmpty(path))
       throw `Unable to find ${app} in path`
     

@@ -13,8 +13,8 @@
     "dist/**"
   ],
   "scripts": {
-    "compile": "mkdir -p dist && npx babel src/ --out-dir dist  --source-maps inline ",
-    "watch": "mkdir -p dist && npx babel src/ --watch --out-dir dist  --source-maps inline",
+    "compile": "npx babel src/ --out-dir dist  --source-maps inline ",
+    "watch": "npx babel src/ --watch --out-dir dist  --source-maps inline",
     "prepublish": "npm run compile",
     "test": "echo true"
   },
