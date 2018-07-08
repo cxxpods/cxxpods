@@ -5,7 +5,7 @@ const
 /**
  * Simple command options map, extended by cmake etc
  */
-class CommandOptions {
+export default class CommandOptions {
   
   constructor(values = {}) {
     this.values = values || {}
@@ -32,7 +32,7 @@ class CommandOptions {
     return this
   }
   
-  get(key) {
+  get(key, defaultValue = "") {
     return this.values[key]
   }
   
@@ -82,6 +82,15 @@ class CommandOptions {
   }
   
   /**
+   * By default does nothing
+   * 
+   * @param {string} value - process a given value
+   */
+  processValue(value) {
+    return value
+  }
+
+  /**
    * To string, same as toArgs()
    *
    * @param options
@@ -97,13 +106,14 @@ class CommandOptions {
       args = []
     
     for (let key of Object.keys(this.values)) {
-      const value = this.values[key]
-      args.push(`${keyPrefix}${key}${joinWith}${useQuotes ? "\"" : ""}${value}${useQuotes ? "\"" : ""}`)
+      const 
+        value = this.values[key],
+        quoteValue = value && value.indexOf(" ") != -1 && useQuotes
+
+      args.push(`${keyPrefix}${key}${joinWith}${quoteValue ? "\"" : ""}${this.processValue(value)}${quoteValue ? "\"" : ""}`)
     }
     
     return args.join(" ")
   }
   
 }
-
-module.exports = CommandOptions

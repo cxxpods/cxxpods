@@ -85,8 +85,8 @@ export default class BuildType {
     const
       rootProject = project.rootProject || project
     
-    this.dir = isTool ? project.toolsDir : `${rootProject.projectDir}/.cunit/${this.toString()}`
-    this.rootDir = isTool ? project.toolsRoot : `${this.dir}/root`
+    this.dir = (isTool ? project.toolsDir : `${rootProject.projectDir}/.cunit/${this.toString()}`).replace(/\\/g,'/')
+    this.rootDir = (isTool ? project.toolsRoot : `${this.dir}/root`).replace(/\\/g,'/')
     
     File.mkdirs(this.rootDir)
   }

@@ -44,12 +44,12 @@ include(CMakeFindDependencyMacro)
   message(STATUS "CUnit build type ${CUNIT_BUILD_TYPE}: ${CUNIT_BUILD_ROOT}")
 
   include_directories(
-      ${CUNIT_BUILD_ROOT}/include
+      "${CUNIT_BUILD_ROOT}/include"
     BEFORE
   )
 
   link_directories(
-    ${CUNIT_BUILD_ROOT}/lib
+    "${CUNIT_BUILD_ROOT}/lib"
   )
 
   list(INSERT CMAKE_MODULE_PATH 0 "${CUNIT_BUILD_ROOT}/lib/cmake")
@@ -78,12 +78,12 @@ include(CMakeFindDependencyMacro)
     {{/if}}
 
     include_directories(
-        {{rootDir}}/include
+        "{{rootDir}}/include"
       BEFORE
     )
 
     link_directories(
-        {{rootDir}}/lib
+        "{{rootDir}}/lib"
     )
 
     list(INSERT CMAKE_MODULE_PATH 0 "{{rootDir}}/lib/cmake")
@@ -96,8 +96,8 @@ include(CMakeFindDependencyMacro)
 macro(find_tool name)
   set(_args ${ARGN})
   list(GET _args 0 _isRequired)
-  set(_toolsCmake {{toolsRoot}}/lib/cmake)
-  set(_toolFile ${_toolsCmake}/FindTool${name}.cmake)
+  set(_toolsCmake "{{toolsRoot}}/lib/cmake")
+  set(_toolFile "${_toolsCmake}/FindTool${name}.cmake")
   if (EXISTS ${_toolFile})
     include(${_toolFile})
   elseif(${_isRequired} STREQUAL "REQUIRED")
