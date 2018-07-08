@@ -4,7 +4,7 @@ import * as File from "../util/File"
 import * as Fs from 'fs'
 import * as sh from 'shelljs'
 import * as _ from 'lodash'
-import * as Git from 'simple-git/promise'
+import Git from 'simple-git/promise'
 
 
 const log = GetLogger(__filename)
