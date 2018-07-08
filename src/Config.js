@@ -6,13 +6,19 @@ const
 
 const
   sh = require("shelljs"),
-  Home = process.env.HOME,
-  [CMake,Make,Git] = ["cmake","make","git"].map(app => {
-    const path = sh.which(app)
-    if (!path || _.isEmpty(path))
-      throw `Unable to find ${app} in path`
+  
+  IsWindows = OS.platform().startsWith("win"),
+  Home = IsWindows ? process.env.USERPROFILE : process.env.HOME,
+  Exe = IsWindows ? '.exe' : '',
+  [CMake,Make,Git] = ["cmake",["make","mingw32-make"],"git"].map(appName => {
+    const apps = typeof appName === 'string' ? [appName] : appName
+    for (let app of apps) {
+      const path = sh.which(`${app}${Exe}`)
+      if (path && !_.isEmpty(path))
+        return path
+    }
     
-    return path
+    throw `Unable to find ${appName} in path`    
   })
 
 if (!Home || _.isEmpty(Home))
