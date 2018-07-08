@@ -15,7 +15,7 @@ const
     for (let app of apps) {
       const path = sh.which(`${app}${Exe}`)
       if (path && !_.isEmpty(path))
-        return path
+        return `"${path}"`
     }
     
     throw `Unable to find ${appName} in path`    
@@ -107,6 +107,7 @@ class Config {
 
 module.exports = {
   Config: new Config(),
+  IsWindows,
   Environment: {
     CUNIT_PROC_COUNT: OS.cpus().length
   },

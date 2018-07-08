@@ -1,7 +1,7 @@
 
-const CommandOptions = require("./CommandOptions")
+import CommandOptions from "./CommandOptions"
 
-class CMakeOptions extends CommandOptions {
+export default class CMakeOptions extends CommandOptions {
   constructor(values = {}) {
     super(values || {})
     
@@ -9,6 +9,14 @@ class CMakeOptions extends CommandOptions {
     this.joinWith = "="
     this.keyPrefix = "-D"
   }
+
+  /**
+   * Swap \ to /
+   * 
+   * @param {string} value - process a given value
+   */
+  processValue(value) {
+    return value.replace(/\\/g,'/')
+  }
 }
 
-module.exports = CMakeOptions

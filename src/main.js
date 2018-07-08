@@ -4,7 +4,7 @@ const
   Os = require("os"),
   Path = require("path"),
   pwd = sh.pwd(),
-  lockfilePath = Path.resolve(Os.tmpdir(),`${new Buffer(pwd).toString('base64')}.lock`)
+  lockfilePath = Path.resolve(Os.tmpdir(),`${Buffer.from(pwd).toString('base64')}.lock`)
 
 lockfile.lock(lockfilePath, {wait: 1000 * 60 * 60 }, err => {
   

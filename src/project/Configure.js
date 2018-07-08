@@ -1,5 +1,5 @@
 import GetLogger from "../Log"
-import {Paths} from "../Config"
+import {IsWindows,Paths} from "../Config"
 import Project from "./Project"
 import * as sh from "shelljs"
 import Fs from 'fs'
@@ -105,12 +105,12 @@ export async function makeCMakeFile(project) {
       ...buildType,
       name: buildType.name.replace(/-/g, "_").toLowerCase(),
       nameUpper: buildType.name.replace(/-/g, "_").toUpperCase(),
-      rootDir: buildType.rootDir,
+      rootDir: buildType.rootDir.replace(/\\/g,'/'),
       toolchain: buildType.toolchain
     })),
     cmakeContext = {
       android: android === true,
-      toolsRoot,
+      toolsRoot: toolsRoot.replace(/\\/g,'/'),
       buildTypes: cmakeBuildTypes,
       buildTypeNames: cmakeBuildTypes.map(buildType => buildType.name).join(";")
     }
@@ -148,7 +148,7 @@ async function makeDependencyCMakeFile(project, buildConfig) {
       ...buildType,
       name: buildType.name.replace(/-/g, "_").toLowerCase(),
       nameUpper: buildType.name.replace(/-/g, "_").toUpperCase(),
-      rootDir: buildType.rootDir,
+      rootDir: buildType.rootDir.replace(/\\/g,'/'),
       toolsRoot,
       toolchain: buildType.toolchain
     }
@@ -197,7 +197,7 @@ async function configureDependency(project, dep, buildConfig) {
   }
   sh.popd()
   log.info(`CMake successfully configured`)
-  
+  return cmakeOptions  
 }
 
 /**
@@ -211,23 +211,31 @@ async function configureDependency(project, dep, buildConfig) {
 async function buildDependencyCMake(project, dep, buildConfig) {
   const
     {name, version} = dep,
-    {src, build} = buildConfig
+    {src, build, type:buildType} = buildConfig,
+    {toolchain} = buildType
   
   
-  await configureDependency(project, dep, buildConfig)
+  const cmakeOpts = await configureDependency(project, dep, buildConfig)
   
   // BUILD IT BIGGER
   sh.pushd(build)
-  const makeCmd = `${Paths.Make} -j${OS.cpus().length}`
-  log.info(`Making ${name}@${version} with: ${makeCmd}`)
+  const 
+    cmakeBuildType = cmakeOpts.get("CMAKE_BUILD_TYPE","Release"),
+    makeCmd = `${Paths.CMake} --build . ${!IsWindows ? "-- -j${OS.cpus().length" : ` -- /P:Configuration=${cmakeBuildType}`}`
+  
+    log.info(`Making ${name}@${version} with: ${makeCmd}`)
   if (sh.exec(makeCmd).code !== 0) {
     throw `Make failed`
   }
   sh.popd()
   log.info("Make completed successfully")
   
+  // INSTALL 
   sh.pushd(build)
-  const installCmd = `${Paths.Make} -j${OS.cpus().length} install`
+  const 
+    installCmd = IsWindows ?
+      `${Paths.CMake} --build . --target INSTALL -- /P:Configuration=${cmakeBuildType}` : 
+      `${Paths.Make} -j${OS.cpus().length} install`
   log.info(`Installing ${name}@${version} with: ${installCmd}`)
   if (sh.exec(installCmd).code !== 0) {
     throw `Install failed`
@@ -352,7 +360,7 @@ async function buildDependency(project, dep, buildConfig) {
 function postDependencyInstall(project, dep, buildConfig) {
   const
     {type, build: buildDir} = buildConfig,
-    rootDir = type.rootDir,
+    rootDir = type.rootDir.replace(/\\/g,'/'),
     cmakeConfig = getValue(() => dep.project.config.cmake, {}),
     {findTemplate: cmakeFindTemplate, toolTemplate: cmakeToolTemplate} = cmakeConfig,
     
