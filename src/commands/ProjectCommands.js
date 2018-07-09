@@ -1,7 +1,6 @@
 
 import {configure,makeCMakeFile} from "../project/Configure"
 import Project from "../project/Project"
-import {DependencyManager} from "../project/Dependency"
 import GetLogger from "../Log"
 import {AndroidArgs} from "../project/BuiltType"
 
@@ -85,7 +84,7 @@ module.exports = (Yargs) => {
               
               log.info(`${project.name}: Build types`)
               buildTypes.forEach(buildType =>
-                log.info(`${buildType} -> ${buildType.profile} = ${buildType.toolchain.triplet}`)
+                log.info(`${buildType} -> ${buildType.toolchain.triplet}`)
               )
             }
           })

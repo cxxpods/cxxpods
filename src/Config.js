@@ -16,13 +16,14 @@ const RepoUpdateTimeout = 1000 * 60 * 60 * 24
 
 export const IsWindows = OS.platform().startsWith("win")
 
+export const ExeSuffix = IsWindows ? '.exe' : ''
+
 const
   Home = IsWindows ? process.env.USERPROFILE : process.env.HOME,
-  Exe = IsWindows ? '.exe' : '',
   [CMake,Make,Git] = ["cmake",["make","mingw32-make"],"git"].map(appName => {
     const apps = typeof appName === 'string' ? [appName] : appName
     for (let app of apps) {
-      const path = sh.which(`${app}${Exe}`)
+      const path = sh.which(`${app}${ExeSuffix}`)
       if (path && !_.isEmpty(path))
         return `"${path}"`
     }

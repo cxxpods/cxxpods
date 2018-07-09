@@ -3,7 +3,7 @@ import {IsWindows,Paths} from "../Config"
 import Project from "./Project"
 import * as sh from "shelljs"
 import Fs from 'fs'
-import File from "../util/File"
+import File, {fixPath} from "../util/File"
 import Assert from "../util/Assert"
 import CMakeOptions from "../util/CMakeOptions"
 import Path from "path"
@@ -105,13 +105,13 @@ export async function makeCMakeFile(project) {
       ...buildType,
       name: buildType.name.replace(/-/g, "_").toLowerCase(),
       nameUpper: buildType.name.replace(/-/g, "_").toUpperCase(),
-      rootDir: buildType.rootDir.replace(/\\/g,'/'),
+      rootDir: fixPath(buildType.rootDir),
       toolchain: buildType.toolchain
     })),
     cmakeContext = {
       android: android === true,
-      toolsRoot: toolsRoot.replace(/\\/g,'/'),
-      defaultBuildTypeName: cmakeBuildTypes[0].name,
+      toolsRoot: fixPath(toolsRoot),
+      defaultBuildTypeName: getValue(() => cmakeBuildTypes[0].name,""),
       buildTypes: cmakeBuildTypes,
       buildTypeNames: cmakeBuildTypes.map(buildType => buildType.name).join(";")
     }
@@ -361,7 +361,7 @@ async function buildDependency(project, dep, buildConfig) {
 function postDependencyInstall(project, dep, buildConfig) {
   const
     {type, build: buildDir} = buildConfig,
-    rootDir = type.rootDir.replace(/\\/g,'/'),
+    rootDir = fixPath(type.rootDir),
     cmakeConfig = getValue(() => dep.project.config.cmake, {}),
     {findTemplate: cmakeFindTemplate, toolTemplate: cmakeToolTemplate} = cmakeConfig,
     

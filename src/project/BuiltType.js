@@ -1,17 +1,15 @@
-
 import * as _ from 'lodash'
-import {CompilerType, Processor, ProcessorNodeMap, System} from "./BuildConstants"
+import {CompilerType, Architecture, ProcessorNodeMap, System, ABI} from "./BuildConstants"
 import Toolchain from "./Toolchain"
 import Dependency from "./Dependency"
 import Triplet from "./Triplet"
-import File from "../util/File"
+import File, {fixPath} from "../util/File"
 import GetLogger from "../Log"
 
 const log = GetLogger(__filename)
 
 export const AndroidArgs = [
   "CMAKE_TOOLCHAIN_FILE",
-  "CMAKE_BUILD_TYPE",
   "ANDROID_PLATFORM",
   "ANDROID_ABI",
   "ANDROID_NDK",
@@ -22,11 +20,10 @@ export const AndroidArgs = [
 ].reduce((args, nextArg) => {
   args[nextArg] = nextArg
   return args
-},{})
+}, {})
 
 
 export const AndroidArgsRequired = [
-  "CMAKE_BUILD_TYPE",
   "CMAKE_TOOLCHAIN_FILE",
   "ANDROID_ABI",
   "ANDROID_NDK"
@@ -49,39 +46,37 @@ export default class BuildType {
   static configureProject(project) {
     const
       {config} = project,
-      {toolchains,android} = project.rootProject || project,
-      profiles = android ? [] : config.profiles ? config.profiles : ['Debug', 'Release']
-  
+      {toolchains, android} = project.rootProject || project
+    
     if (toolchains.length === 0) {
       if (!android && config.toolchainExcludeHost !== true) {
         toolchains.push(Toolchain.host)
       }
-    
+      
       Object
         .keys(config.toolchains || {})
         .map(triplet => {
           const
             toolchainFileOrObject = config.toolchains[triplet],
-            [processor,system,compilerType] = _.split(triplet,"-")
-        
+            [processor, system, abi] = _.split(triplet, "-")
+          
           toolchains.push(new Toolchain(
             new Triplet(
               Object.keys(System).find(it => it.toLowerCase() === system),
-              Object.keys(Processor).find(it => it.toLowerCase() === processor),
-              Object.keys(CompilerType).find(it => it.toLowerCase() === compilerType)
+              Object.keys(Architecture).find(it => it.toLowerCase() === processor),
+              Object.keys(ABI).find(it => it.toLowerCase() === abi)
             ),
             toolchainFileOrObject
           ))
         })
-    
+      
     }
-  
-  
-    Object.assign(project,{
-      profiles,
-      buildTypes: _.flatten(profiles.map(profile => toolchains.map(toolchain =>
-        new BuildType(project,toolchain,profile)
-      )))
+    
+    
+    Object.assign(project, {
+      buildTypes: toolchains.map(toolchain =>
+        new BuildType(project, toolchain)
+      )
     })
   }
   
@@ -91,28 +86,27 @@ export default class BuildType {
       return androidBuildType
     
     const
-      opts = Object.keys(AndroidArgs).reduce((opts,nextArg) => {
+      opts = Object.keys(AndroidArgs).reduce((opts, nextArg) => {
         opts[nextArg] = argv[nextArg]
         return opts
-      },{})
-  
-    const missingOpts = AndroidArgsRequired.filter(arg => [null,undefined].includes(opts[arg]))
+      }, {})
+    
+    const missingOpts = AndroidArgsRequired.filter(arg => [null, undefined].includes(opts[arg]))
     if (missingOpts.length)
       throw `Missing required args for android: ${_.join(missingOpts)}`
-  
+    
     const
-      arch = Processor[opts.ANDROID_ABI] || ProcessorNodeMap[opts.ANDROID_ABI],
+      arch = Architecture[opts.ANDROID_ABI] || ProcessorNodeMap[opts.ANDROID_ABI],
       sys = System.Android,
-      compilerType = CompilerType.Unknown,
-      profile = `${arch}_${opts.CMAKE_BUILD_TYPE}`
-  
+      compilerType = CompilerType.Android
+    
     // Object.entries(opts).forEach(([key,value]) => {
     //   console.log(`${key}=${value}`)
     // })
     
-    androidToolchain = new Toolchain(new Triplet(sys,arch,compilerType),null,opts)
+    androidToolchain = new Toolchain(new Triplet(sys, arch, ABI.ANDROID, compilerType), null, opts)
     androidToolchain.name = arch
-    androidBuildType = new BuildType(project,androidToolchain,opts.CMAKE_BUILD_TYPE)
+    androidBuildType = new BuildType(project, androidToolchain)
     
     project.buildTypes = [androidBuildType]
     log.info(`Updating dependencies: ${Dependency.allDependencies.length}`)
@@ -122,28 +116,40 @@ export default class BuildType {
     return androidBuildType
   }
   
-  constructor(project,toolchain,profile,isTool = false) {
+  constructor(project, toolchain, isTool = false) {
     this.isTool = isTool
-    this.profile = profile
     this.toolchain = toolchain
     
     const
       rootProject = project.rootProject || project
     
-    this.dir = (isTool ? project.toolsDir : `${rootProject.projectDir}/.cunit/${this.toString()}`).replace(/\\/g,'/')
-    this.rootDir = (isTool ? project.toolsRoot : `${this.dir}/root`).replace(/\\/g,'/')
+    this.dir = fixPath(isTool ? project.toolsDir : `${rootProject.projectDir}/.cunit/${this.toString()}`)
+    this.rootDir = fixPath(isTool ? project.toolsRoot : `${this.dir}/root`)
     
     File.mkdirs(this.rootDir)
   }
   
+  /**
+   * Build type name is the same as the toolchain
+   * as they have become synonyms in the current version
+   *
+   * @returns {string}
+   */
   get name() {
-    return `${this.toolchain.toString()}_${this.profile.toLowerCase()}`
+    return `${this.toolchain}`
   }
   
-  toScriptEnvironment(rootProject,project) {
+  /**
+   * Convert to env variable map
+   * that can be used by scripts, etc
+   *
+   * @param rootProject
+   * @param project
+   */
+  toScriptEnvironment(rootProject, project) {
     return _.merge(
       {},
-      this.toolchain.toScriptEnvironment(rootProject,project),
+      this.toolchain.toScriptEnvironment(rootProject, project),
       {
         CUNIT_BUILD_ROOT: this.rootDir,
         CUNIT_BUILD_LIB: `${this.rootDir}/lib`,
@@ -152,9 +158,9 @@ export default class BuildType {
       })
   }
   
-  toCMakeOptions(rootProject,project) {
+  toCMakeOptions(rootProject, project) {
     return _.merge({},
-      this.toolchain.toCMakeOptions(rootProject,project),
+      this.toolchain.toCMakeOptions(rootProject, project),
       {
         CMAKE_INSTALL_PREFIX: this.rootDir,
         CMAKE_MODULE_PATH: `${this.rootDir}/lib/cmake`,
@@ -170,7 +176,6 @@ export default class BuildType {
     return {
       toolchain: this.toolchain.toBuildStamp(),
       cmakeOptions: this.toCMakeOptions(),
-      profile: this.profile,
       dir: this.dir
     }
   }

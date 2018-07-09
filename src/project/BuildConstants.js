@@ -7,7 +7,7 @@ export const System = {
   Windows: "Windows"
 }
 
-export const Processor = {
+export const Architecture = {
   x86: "x86",
   x86_64: "x86_64",
   arm: "arm",
@@ -15,16 +15,26 @@ export const Processor = {
 }
 
 export const ProcessorNodeMap = {
-  [Processor.arm]: Processor.arm,
-  "arm64-v8a": Processor.aarch64,
-  "arm64": Processor.aarch64,
-  "x64": Processor.x86_64,
-  "x32": Processor.x86
+  [Architecture.arm]: Architecture.arm,
+  "arm64-v8a": Architecture.aarch64,
+  "arm64": Architecture.aarch64,
+  "x64": Architecture.x86_64,
+  "x32": Architecture.x86
+}
+
+
+export const ABI = {
+  GNU: "GNU",
+  EABI: "EABI",
+  ANDROID: "ANDROID",
+  WINDOWS: "WINDOWS",
+  ELF: "ELF",
+  Unknown: "Unknown"
 }
 
 export const CompilerType = {
-  GNU: "GNU",
-  Unknown: "Unknown",
-  AppleClang: "AppleClang",
+  GCC: "GCC",
+  Android: "Android",
+  Clang: "Clang",
   MSVC: "MSVC"
 }

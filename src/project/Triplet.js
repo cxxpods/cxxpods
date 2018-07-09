@@ -1,5 +1,8 @@
-import {CompilerType, Processor, ProcessorNodeMap, System} from "./BuildConstants"
+import {CompilerType, Architecture, ABI, ProcessorNodeMap, System} from "./BuildConstants"
 import OS from 'os'
+import * as sh from 'shelljs'
+import {ExeSuffix} from "../Config"
+import * as _ from 'lodash'
 
 const {IsWindows} = require("../Config")
 
@@ -7,18 +10,24 @@ const {IsWindows} = require("../Config")
  * Triplet
  */
 export class Triplet {
-  constructor(system,processor,compilerType) {
+  constructor(system,arch,abi,compilerType = CompilerType.GCC) {
     if (!System[system]) throw `Unknown system: ${system}`
-    if (!Processor[processor]) throw `Unknown processor: ${processor}`
+    if (!Architecture[arch]) throw `Unknown processor: ${arch}`
+    if (!ABI[abi]) throw `Unknown abi type: ${abi}`
     if (!CompilerType[compilerType]) throw `Unknown compiler type: ${compilerType}`
     
+    this.abi = abi
     this.system = system
-    this.processor = processor
+    this.arch = arch
     this.compilerType = compilerType
   }
   
+  get tupleName() {
+    return `${this.arch}-${this.system.toLowerCase()}`
+  }
+  
   toString() {
-    return `${this.processor}-${this.system.toLowerCase()}-${this.compilerType.toLowerCase()}`
+    return `${this.arch}-${this.system.toLowerCase()}-${this.abi.toLowerCase()}`
   }
 }
 
@@ -33,14 +42,29 @@ function makeHostTriplet() {
     arch = OS.arch(),
     system = IsWindows ?
       System.Windows :
-      Object.keys(System).find(sys => sys.toLowerCase() === platform)
+      Object.keys(System).find(sys => sys.toLowerCase() === platform),
+    ccExe = sh.which(`cc${ExeSuffix}`)
+  
+  let compilerType = IsWindows ? CompilerType.MSVC : CompilerType.GCC
+  
+  if (!_.isEmpty(ccExe)) {
+    const
+      result = sh.exec(`${ccExe} --version`,{silent:true})
+    
+    if (result.code === 0) {
+      if (result.stdout.toLowerCase().indexOf("clang") > -1)
+        compilerType = CompilerType.Clang
+      else
+        log.warn(`Unable to detect compiler type, using: ${compilerType}`)
+    }
+  }
+  
   
   return new Triplet(
     system,
     ProcessorNodeMap[arch],
-    system === System.Windows ? CompilerType.MSVC :
-      System.Darwin ? CompilerType.AppleClang :
-        CompilerType.GNU
+    IsWindows ? ABI.WINDOWS : ABI.GNU,
+    compilerType
   )
 }
 

@@ -1,6 +1,6 @@
 import Toolchain from "./Toolchain"
 import BuildType from "./BuiltType"
-import {CompilerType, Processor, ProcessorNodeMap, System} from "./BuildConstants"
+import {CompilerType, Architecture, ProcessorNodeMap, System} from "./BuildConstants"
 import GetLogger from '../Log'
 import Tool from './Tool'
 import {getValue} from "typeguard"
@@ -11,7 +11,6 @@ const
   log = GetLogger(__filename),
   File = require("../util/File"),
   _ = require('lodash')
-  
 
 
 /**
@@ -21,7 +20,7 @@ const
  * @param context
  * @param processedConfigs
  */
-function resolveConfigVariables(project,context = null, processedConfigs = []) {
+function resolveConfigVariables(project, context = null, processedConfigs = []) {
 
 }
 
@@ -30,12 +29,12 @@ function resolveConfigVariables(project,context = null, processedConfigs = []) {
  */
 export default class Project {
   constructor(path = sh.pwd(), rootProject = null, isTool = false, depConfig = {}) {
-  
+    
     let realRootProject = rootProject
-    while(realRootProject && realRootProject.rootProject) {
+    while (realRootProject && realRootProject.rootProject) {
       realRootProject = realRootProject.rootProject
     }
-  
+    
     rootProject = realRootProject
     
     this.rootProject = rootProject
@@ -46,11 +45,10 @@ export default class Project {
     this.toolsRoot = `${this.toolsDir}/root`
     this.toolsBuildType = rootProject ?
       rootProject.toolsBuildType :
-      new BuildType(this,Toolchain.host,"Release",true)
+      new BuildType(this, Toolchain.host, true)
     
     this.config = {}
     this.configFiles = []
-    this.profiles = []
     this.toolchains = getValue(() => rootProject.toolchains, [])
     this.buildTypes = getValue(() => rootProject.buildTypes, [])
     
@@ -58,24 +56,25 @@ export default class Project {
     const cunitFile = require("./Configure").findCUnitConfigFile(path)
     if (!cunitFile)
       throw `No cmake file found in: ${path}`
-  
-    const cunitFiles = [cunitFile,`${path}/cunit.local.yml`]
+    
+    // BUILD CONFIGURATION
+    const cunitFiles = [cunitFile, `${path}/cunit.local.yml`]
     
     cunitFiles.forEach(file => {
-        if (File.exists(file)) {
-          this.loadConfigFile(file)
-        } else {
-          log.info(`CUnit file (${file}) does not exist`)
-        }
+      if (File.exists(file)) {
+        this.loadConfigFile(file)
+      } else {
+        log.info(`CUnit file (${file}) does not exist`)
+      }
     })
-  
+    
     // MERGE DEPENDENCY CONFIG, THIS FORCES OPTIONS INTO THE DEPENDENCY
     // FROM A HIGHER LEVEL PROJECT
-    _.merge(this.config,depConfig)
+    _.merge(this.config, depConfig)
     
     // SET THE PROJECT NAME
-    this.name = this.config.name || _.last(_.split(path,"/"))
-    this.android = [true,"true"].includes(getValue(() => this.rootProject.config,this.config).android)
+    this.name = this.config.name || _.last(_.split(path, "/"))
+    this.android = [true, "true"].includes(getValue(() => this.rootProject.config, this.config).android)
     
     resolveConfigVariables(this)
     
@@ -92,7 +91,7 @@ export default class Project {
     
     // BUILD TOOLS UP NO MATTER WHAT
     Tool.configureProject(this)
-  
+    
     log.debug(`Loaded project: ${this.name}`)
   }
   
@@ -103,7 +102,7 @@ export default class Project {
       return
     }
     this.configFiles.push(path)
-    _.merge(this.config,File.readFileYaml(path))
+    _.merge(this.config, File.readFileYaml(path))
   }
   
   
@@ -111,7 +110,7 @@ export default class Project {
    * Get sorted and ordered, unique dependencies
    * @returns {*|void}
    */
-
+  
   static get dependencyGraph() {
     return Dependency.toDependencyGraph()
   }
@@ -126,7 +125,7 @@ export default class Project {
 
 Object.assign(Project, {
   System,
-  Processor,
+  Processor: Architecture,
   CompilerType
 })
 

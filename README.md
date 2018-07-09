@@ -99,7 +99,6 @@ It takes a few simple steps.
 
 ```yaml
 name: cunit-example
-profiles: [Debug,Release]
 
 dependencies:
   protobuf: 3.1.0

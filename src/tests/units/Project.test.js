@@ -1,5 +1,5 @@
 import Triplet from "../../project/Triplet"
-import {CompilerType, Processor, System} from "../../project/BuildConstants"
+import {CompilerType, Architecture, System} from "../../project/BuildConstants"
 import * as Tmp from 'tmp'
 import Git from 'simple-git/promise'
 import * as sh from 'shelljs'
@@ -53,7 +53,7 @@ test('Configure and compile',async () => {
 })
 
 // test("Triplet toString()", () => {
-//   expect(`${new Triplet(System.Android,Processor.aarch64,CompilerType.GNU)}`)
-//     .toBe(`${Processor.aarch64}-${System.Android.toLowerCase()}-${CompilerType.GNU.toLowerCase()}`)
+//   expect(`${new Triplet(System.Android,Architecture.aarch64,CompilerType.GCC)}`)
+//     .toBe(`${Architecture.aarch64}-${System.Android.toLowerCase()}-${CompilerType.GCC.toLowerCase()}`)
 // })
 

@@ -69,7 +69,7 @@ export function writeFileJSON(path,obj,formatted = false) {
 }
 
 export function getFileModifiedTimestamp(path, timestamp = 0) {
-  if (!exists(path))
+  if (!exists(path) && !isDirectory(path))
     return timestamp
   
   if (!isDirectory(path)) {

@@ -206,8 +206,8 @@ export default class Toolchain {
     }
     
     // GET ALL TOP LEVEL & SYSTEM OVERRIDES
-    const
-      overrideOpts = this.toSystemOverrides(rootProject,project,'cmake.flags')
+    const overrideOpts = this.toSystemOverrides(rootProject,project,'cmake.flags')
+    
     // MERGE EVERYTHING TOGETHER
     return Object.assign(opts,overrideOpts)
   }
@@ -218,7 +218,7 @@ export default class Toolchain {
    * @returns {*|string}
    */
   toString() {
-    return this.name || this.triplet.toString()
+    return this.triplet.tupleName
   }
 }
 
