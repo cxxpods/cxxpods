@@ -1,13 +1,12 @@
 import GetLogger from '../Log'
-
+import {resolveDependency} from "../repo/Repo"
+import * as sh from 'shelljs'
+import OS from 'os'
+import File from "../util/File"
+import * as _ from 'lodash'
+import * as SemVer from 'semver'
 const
-  {resolveDependency} = require("../repo/Repo"),
-  sh = require("shelljs"),
-  OS = require("os"),
-  log = GetLogger(__filename),
-  File = require("../util/File"),
-  _ = require('lodash'),
-  SemVer = require("semver")
+  log = GetLogger(__filename)
 
 /**
  * Global dependency manager
@@ -81,7 +80,7 @@ const DependencyManager = {
 /**
  * All dependencies
  */
-class Dependency {
+export default class Dependency {
   
   /**
    * Configure project dependencies
@@ -181,11 +180,8 @@ class Dependency {
   
 }
 
-
-
-
-
-module.exports = {
-  Dependency,
-  DependencyManager
-}
+/**
+ * Assign all Dependency manager functions to
+ * Dependency as static values
+ */
+Object.assign(Dependency,DependencyManager)

@@ -8,7 +8,7 @@ import * as Tmp from 'tmp'
 import {processTemplate} from "../util/Template"
 import {getValue} from "typeguard"
 import {isDefined} from "../util/Checker"
-
+import Triplet from "./Triplet"
 
 const log = GetLogger(__filename)
 
@@ -223,3 +223,9 @@ export default class Toolchain {
 }
 
 
+/**
+ * The host toolchain
+ *
+ * @type {Toolchain}
+ */
+Toolchain.host = Toolchain.makeHostToolchain(Triplet.host)

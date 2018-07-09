@@ -48,7 +48,7 @@ lockfile.lock(lockfilePath, {wait: 1000 * 60 * 60 }, err => {
   const Repo = require('./repo/Repo')
   
   // START
-  Repo.firstTimeInit()
+  Repo.updateReposIfNeeded()
     .then(() => {
       try {
         [
@@ -67,6 +67,7 @@ lockfile.lock(lockfilePath, {wait: 1000 * 60 * 60 }, err => {
     .then(unlock)
     .catch(ex => {
       log.error("An error occurred", ex)
+      console.log(ex)
       unlock()
     })
   

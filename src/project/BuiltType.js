@@ -2,8 +2,8 @@
 import * as _ from 'lodash'
 import {CompilerType, Processor, ProcessorNodeMap, System} from "./BuildConstants"
 import Toolchain from "./Toolchain"
-import {Dependency,DependencyManager} from "./Dependency"
-import {Triplet} from "./Project"
+import Dependency from "./Dependency"
+import Triplet from "./Triplet"
 import File from "../util/File"
 import GetLogger from "../Log"
 
@@ -41,6 +41,51 @@ let androidBuildType = null
  */
 export default class BuildType {
   
+  /**
+   * Configure a project's build types
+   *
+   * @param project
+   */
+  static configureProject(project) {
+    const
+      {config} = project,
+      {toolchains,android} = project.rootProject || project,
+      profiles = android ? [] : config.profiles ? config.profiles : ['Debug', 'Release']
+  
+    if (toolchains.length === 0) {
+      if (!android && config.toolchainExcludeHost !== true) {
+        toolchains.push(Toolchain.host)
+      }
+    
+      Object
+        .keys(config.toolchains || {})
+        .map(triplet => {
+          const
+            toolchainFileOrObject = config.toolchains[triplet],
+            [processor,system,compilerType] = _.split(triplet,"-")
+        
+          toolchains.push(new Toolchain(
+            new Triplet(
+              Object.keys(System).find(it => it.toLowerCase() === system),
+              Object.keys(Processor).find(it => it.toLowerCase() === processor),
+              Object.keys(CompilerType).find(it => it.toLowerCase() === compilerType)
+            ),
+            toolchainFileOrObject
+          ))
+        })
+    
+    }
+  
+  
+    Object.assign(project,{
+      profiles,
+      buildTypes: _.flatten(profiles.map(profile => toolchains.map(toolchain =>
+        new BuildType(project,toolchain,profile)
+      )))
+    })
+  }
+  
+  
   static makeAndroidBuildType(project, argv) {
     if (androidBuildType)
       return androidBuildType
@@ -70,7 +115,7 @@ export default class BuildType {
     androidBuildType = new BuildType(project,androidToolchain,opts.CMAKE_BUILD_TYPE)
     
     project.buildTypes = [androidBuildType]
-    log.info(`Updating dependencies: ${DependencyManager.allDependencies.length}`)
+    log.info(`Updating dependencies: ${Dependency.allDependencies.length}`)
     Dependency.updateAllBuildConfigs()
     
     log.info(`Made build type: ${androidBuildType}`)

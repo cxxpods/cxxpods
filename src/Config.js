@@ -1,11 +1,20 @@
-const
-  {exists, mkdirs} = require("./util/File"),
-  _ = require("lodash"),
-  Fs = require("fs"),
-  OS = require("os")
+import {exists, mkdirs, readFileJSON, writeFileJSON} from "./util/File"
+import * as _ from "lodash"
+import Fs from "fs"
+import OS from "os"
+import * as sh from 'shelljs'
+
+/**
+ * Maximum time we can go without a repo update
+ *
+ * @type {number}
+ */
+const RepoUpdateTimeout = 1000 * 60 * 60 * 24
+
+
+
 
 const
-  sh = require("shelljs"),
   IsWindows = OS.platform().startsWith("win"),
   Home = IsWindows ? process.env.USERPROFILE : process.env.HOME,
   Exe = IsWindows ? '.exe' : '',
@@ -39,11 +48,12 @@ if (!mkdirs(CUnitRepo)) {
 /**
  * Default configuration
  *
- * @type {{rootPath: string, repos: *[]}}
+ * @type {{repos: Array, ready: boolean, repoUpdateTimestamp: number}}
  */
 const DefaultConfig = {
   repos: [],
-  ready: false
+  ready: false,
+  repoUpdateTimestamp: 0
 }
 
 /**
@@ -52,31 +62,40 @@ const DefaultConfig = {
 class Config {
   
   
-  
   constructor() {
     this.data = DefaultConfig
     this.load()
     this.firstTime = !this.data.ready
     this.data.ready = true
-    
     this.save()
   }
   
+  /**
+   * Load configuration
+   *
+   * @returns {boolean}
+   */
   load() {
     if (!exists(CUnitConfigFile)) {
       return false
     }
     
-    
-    this.data = JSON.parse(Fs.readFileSync(CUnitConfigFile,'utf-8'))
-    
+    this.data = readFileJSON(CUnitConfigFile)
   }
   
+  /**
+   * Save configuration
+   */
   save() {
-    Fs.writeFileSync(CUnitConfigFile,JSON.stringify(this.data,null,4),'utf-8')
+    writeFileJSON(CUnitConfigFile,this.data,true)
   }
   
-  
+  /**
+   * Add a repo to the config
+   *
+   * @param url
+   * @returns {Config}
+   */
   addRepository(url) {
     this.data.repos =
       [
@@ -87,19 +106,42 @@ class Config {
     return this
   }
   
+  /**
+   * Remove a repository from the config
+   *
+   * @param url
+   * @returns {Config}
+   */
   removeRepository(url) {
-    this.data.repos =
-      [
-        ...this.data.repos.filter(repoUrl => repoUrl !== url),
-        url
-      ]
+    this.data.repos = [
+      ...this.data.repos.filter(repoUrl => repoUrl !== url),
+      url
+    ]
   
     this.save()
     return this
   }
   
+  
+  /**
+   * Called after repo update to mark time
+   */
+  updatedRepositories() {
+    this.data.repoUpdateTimestamp = Date.now()
+    this.save()
+  }
+  
+  /**
+   * Get configured repos
+   *
+   * @returns {*[]}
+   */
   get repos() {
     return [... this.data.repos, CUnitsDefaultRepo]
+  }
+  
+  get isRepoUpdateNeeded() {
+    return this.firstTime || !this.data.repoUpdateTimestamp || Date.now() - this.data.repoUpdateTimestamp > RepoUpdateTimeout
   }
 }
 

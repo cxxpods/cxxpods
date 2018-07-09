@@ -48,7 +48,7 @@ export function readFileProperties(path) {
     },{})
 }
 
-export function readFileJson(path) {
+export function readFileJSON(path) {
   return JSON.parse(readFile(path))
 }
 
@@ -64,8 +64,8 @@ export function writeFile(path,content) {
   Fs.writeFileSync(path,content,'utf-8')
 }
 
-export function writeFileJSON(path,obj) {
-  Fs.writeFileSync(path,JSON.stringify(obj),'utf-8')
+export function writeFileJSON(path,obj,formatted = false) {
+  Fs.writeFileSync(path,JSON.stringify(obj,null,formatted ? 4 : 0),'utf-8')
 }
 
 export function getFileModifiedTimestamp(path, timestamp = 0) {
@@ -84,6 +84,10 @@ export function getFileModifiedTimestamp(path, timestamp = 0) {
   return timestamp
 }
 
+export function fixPath(path) {
+  return path.replace(/\\/g,'/')
+}
+
 export default {
   exists,
   isDirectory,
@@ -92,7 +96,7 @@ export default {
   readAsset,
   readFile,
   readFileProperties,
-  readFileJson,
+  readFileJson: readFileJSON,
   readFileYaml,
   writeFile,
   writeFileJSON,

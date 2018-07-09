@@ -40,11 +40,23 @@ function getRepoUrl(urlOrName) {
     return repoUrls.find(url => parseRepoName(url) === urlOrName) || urlOrName
 }
 
-function isRepoLocal(url) {
+/**
+ * Check if repo is local or Git backed
+ *
+ * @param url
+ * @returns {boolean}
+ */
+export function isRepoLocal(url) {
   return /^file\:\/\//.test(url) && sh.test("-d",url.replace("file://",""))
 }
 
-function getRepoLocalPath(url) {
+/**
+ * Get local path for repo, local or Git backed
+ *
+ * @param url
+ * @returns {string}
+ */
+export function getRepoLocalPath(url) {
   return `${Paths.CUnitRepo}/${parseRepoName(url)}`
 }
 
@@ -54,7 +66,7 @@ function getRepoLocalPath(url) {
  * @param url
  * @returns {Promise<boolean>}
  */
-async function updateRepo(url) {
+export async function updateRepo(url) {
   const
     name = parseRepoName(url),
     repoUrl = getRepoUrl(url),
@@ -102,7 +114,7 @@ async function updateRepo(url) {
         git = Git(Paths.CUnitRepo)
       
       log.info(`Cloning ${url} -> ${repoLocalPath}`)
-      const result = await git.clone(url,repoLocalPath,{
+      await git.clone(url,repoLocalPath,{
         "--depth": "1"
       })
       
@@ -119,7 +131,7 @@ async function updateRepo(url) {
  *
  * @param url
  */
-async function updateRepos(url = null) {
+export async function updateRepos(url = null) {
   if (!_.isEmpty(url)) {
     await updateRepo(url)
   } else {
@@ -127,6 +139,8 @@ async function updateRepos(url = null) {
     for (url of repoUrls) {
       await updateRepo(url)
     }
+    
+    Config.updatedRepositories()
   }
 }
 
@@ -135,7 +149,7 @@ async function updateRepos(url = null) {
  *
  * @param url
  */
-async function addRepo(url) {
+export async function addRepo(url) {
   const
     name = parseRepoName(url)
   
@@ -157,10 +171,7 @@ async function addRepo(url) {
  *
  * @param url
  */
-function removeRepo(url) {
-  const
-    name = parseRepoName(url)
-  
+export function removeRepo(url) {
   if (!Config.repos.includes(url)) {
     log.error(`Repo ${url} is not registered`)
   } else {
@@ -174,7 +185,7 @@ function removeRepo(url) {
  *
  * @returns {*}
  */
-function getRepoConfigs() {
+export function getRepoConfigs() {
   return Config.repos.map(url => ({
     url,
     name: parseRepoName(url),
@@ -185,7 +196,7 @@ function getRepoConfigs() {
 /**
  * List all configured repos
  */
-function listRepos() {
+export function listRepos() {
   const repos = getRepoConfigs()
   
   console.log("NAME\t\t\t\tURL")
@@ -199,7 +210,7 @@ function listRepos() {
  * @param name
  * @param required
  */
-function resolveDependency(name, required = true) {
+export function resolveDependency(name, required = true) {
   const repoConfigs = getRepoConfigs()
   
   for (let repoConfig of repoConfigs) {
@@ -220,26 +231,21 @@ function resolveDependency(name, required = true) {
  *
  * @returns {*}
  */
-function getRepoLocalPaths() {
+export function getRepoLocalPaths() {
   return Config.repos.map(url => getRepoLocalPath(url))
 }
 
-async function firstTimeInit() {
+
+/**
+ * Update repos if first time init or
+ * last update was more than a set amount
+ * of time ago
+ *
+ * @returns {Promise<void>}
+ */
+export async function updateReposIfNeeded() {
   const {Config} = require("../Config")
-  if (Config.firstTime) {
+  if (Config.isRepoUpdateNeeded) {
     await updateRepos()
   }
-}
-
-// updateRepos()
-//   .then(() => log.info("Updated repos"))
-
-module.exports = {
-  firstTimeInit,
-  updateRepos,
-  addRepo,
-  removeRepo,
-  listRepos,
-  getRepoLocalPaths,
-  resolveDependency
 }

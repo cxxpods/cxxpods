@@ -4,119 +4,14 @@ import {CompilerType, Processor, ProcessorNodeMap, System} from "./BuildConstant
 import GetLogger from '../Log'
 import Tool from './Tool'
 import {getValue} from "typeguard"
+import Dependency from "./Dependency"
 
 const
   sh = require("shelljs"),
-  OS = require("os"),
   log = GetLogger(__filename),
-  {Paths} = require("../Config"),
   File = require("../util/File"),
-  Assert = require("../util/Assert"),
-  _ = require('lodash'),
-  {Dependency,DependencyManager} = require("./Dependency")
+  _ = require('lodash')
   
-
-
-
-
-/**
- * Triplet
- */
-export class Triplet {
-  constructor(system,processor,compilerType) {
-    if (!System[system]) throw `Unknown system: ${system}`
-    if (!Processor[processor]) throw `Unknown processor: ${processor}`
-    if (!CompilerType[compilerType]) throw `Unknown compiler type: ${compilerType}`
-    
-    this.system = system
-    this.processor = processor
-    this.compilerType = compilerType
-  }
-  
-  toString() {
-    return `${this.processor}-${this.system.toLowerCase()}-${this.compilerType.toLowerCase()}`
-  }
-}
-
-/**
- * Create host triplet
- *
- * @returns {Triplet}
- */
-function makeHostTriplet() {
-  const
-    platform = OS.platform(),
-    arch = OS.arch(),
-    system = platform.startsWith("win") ?
-      System.Windows :
-      Object.keys(System).find(sys => sys.toLowerCase() === platform)
-  
-  return new Triplet(
-    system,
-    ProcessorNodeMap[arch],
-    system ===  System.Darwin ? CompilerType.AppleClang : CompilerType.GNU
-  )
-}
-
-const HostTriplet = makeHostTriplet()
-
-
-
-
-/**
- * The host toolchain
- *
- * @type {Toolchain}
- */
-const HostToolchain = Toolchain.makeHostToolchain(HostTriplet)
-
-
-
-
-/**
- * Configure build types
- *
- * @param project
- */
-function configureBuildTypes(project) {
-  const
-    {config} = project,
-    {toolchains,android} = project.rootProject || project,
-    profiles = android ? [] : config.profiles ? config.profiles : ['Debug', 'Release']
-  
-  if (toolchains.length === 0) {
-    if (!android && config.toolchainExcludeHost !== true) {
-      toolchains.push(HostToolchain)
-    }
-  
-    Object
-      .keys(config.toolchains || {})
-      .map(triplet => {
-        const
-          toolchainFileOrObject = config.toolchains[triplet],
-          [processor,system,compilerType] = _.split(triplet,"-")
-        
-        toolchains.push(new Toolchain(
-          new Triplet(
-            Object.keys(System).find(it => it.toLowerCase() === system),
-            Object.keys(Processor).find(it => it.toLowerCase() === processor),
-            Object.keys(CompilerType).find(it => it.toLowerCase() === compilerType)
-          ),
-          toolchainFileOrObject
-        ))
-      })
-    
-  }
-  
-  
-  Object.assign(project,{
-    profiles,
-    buildTypes: _.flatten(profiles.map(profile => toolchains.map(toolchain =>
-      new BuildType(project,toolchain,profile)
-    )))
-  })
-}
-
 
 
 /**
@@ -149,13 +44,15 @@ export default class Project {
     this.isTool = isTool
     this.toolsDir = `${path}/.cunit/tools`
     this.toolsRoot = `${this.toolsDir}/root`
-    this.toolsBuildType = rootProject ? rootProject.toolsBuildType : new BuildType(this,HostToolchain,"Release",true)
+    this.toolsBuildType = rootProject ?
+      rootProject.toolsBuildType :
+      new BuildType(this,Toolchain.host,"Release",true)
     
     this.config = {}
     this.configFiles = []
     this.profiles = []
-    this.toolchains = rootProject ? rootProject.toolchains : []
-    this.buildTypes = rootProject ? rootProject.buildTypes : []
+    this.toolchains = getValue(() => rootProject.toolchains, [])
+    this.buildTypes = getValue(() => rootProject.buildTypes, [])
     
     // LOAD THE PROJECT CONFIGURATION
     const cunitFile = require("./Configure").findCUnitConfigFile(path)
@@ -187,7 +84,7 @@ export default class Project {
     } else {
       log.debug(`Assembling toolchains and build types: ${this.name}`)
       if (!this.buildTypes.length)
-        configureBuildTypes(this)
+        BuildType.configureProject(this)
     }
     
     // CONFIGURE DEPENDENCIES
@@ -216,7 +113,7 @@ export default class Project {
    */
 
   static get dependencyGraph() {
-    return DependencyManager.toDependencyGraph()
+    return Dependency.toDependencyGraph()
   }
   
   static get toolDependencyGraph() {
@@ -228,9 +125,6 @@ export default class Project {
 
 
 Object.assign(Project, {
-  BuildType,
-  Triplet,
-  Toolchain,
   System,
   Processor,
   CompilerType

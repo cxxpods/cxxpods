@@ -221,7 +221,7 @@ async function buildDependencyCMake(project, dep, buildConfig) {
   sh.pushd(build)
   const 
     cmakeBuildType = cmakeOpts.get("CMAKE_BUILD_TYPE","Release"),
-    makeCmd = `${Paths.CMake} --build . ${!IsWindows ? "-- -j${OS.cpus().length" : ` -- /P:Configuration=${cmakeBuildType}`}`
+    makeCmd = `${Paths.CMake} --build . ${!IsWindows ? `-- -j${OS.cpus().length}` : ` -- /P:Configuration=${cmakeBuildType}`}`
   
     log.info(`Making ${name}@${version} with: ${makeCmd}`)
   if (sh.exec(makeCmd).code !== 0) {

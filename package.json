@@ -16,7 +16,7 @@
     "compile": "npx babel src/ --out-dir dist  --source-maps inline ",
     "watch": "npx babel src/ --watch --out-dir dist  --source-maps inline",
     "prepublish": "npm run compile",
-    "test": "echo true"
+    "test": "jest"
   },
   "bin": {
     "cunit": "./bin/cunit.js"
@@ -39,11 +39,13 @@
   },
   "devDependencies": {
     "@types/handlebars": "^4.0.38",
+    "@types/jest": "^23.1.4",
     "@types/shelljs": "^0.8.0",
     "@types/yargs": "^11.0.0",
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "babel-preset-stage-0": "^6.24.1",
+    "jest": "^23.3.0",
     "npx": "^10.2.0",
     "pkg": "^4.3.3",
     "typescript": "^2.9.2"
