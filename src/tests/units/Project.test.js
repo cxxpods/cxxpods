@@ -5,6 +5,7 @@ import Git from 'simple-git/promise'
 import * as sh from 'shelljs'
 import {exists, fixPath} from "../../util/File"
 import {Environment, Paths} from "../../Config"
+import {updateRepos} from "../../repo/Repo"
 
 // 15 MINUTE TIMEOUT
 jest.setTimeout(60000 * 15)
@@ -30,6 +31,8 @@ test('Configure and compile',async () => {
     expect(exists(`${dir}/cunit.yml`)).toBeTruthy()
   
     sh.cd(dir)
+    await updateRepos()
+    
     await require('../../project/Configure').configure()
     sh.mkdir(buildDir)
     sh.cd(buildDir)
