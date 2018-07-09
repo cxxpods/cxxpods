@@ -14,8 +14,9 @@ const RepoUpdateTimeout = 1000 * 60 * 60 * 24
 
 
 
+export const IsWindows = OS.platform().startsWith("win")
+
 const
-  IsWindows = OS.platform().startsWith("win"),
   Home = IsWindows ? process.env.USERPROFILE : process.env.HOME,
   Exe = IsWindows ? '.exe' : '',
   [CMake,Make,Git] = ["cmake",["make","mingw32-make"],"git"].map(appName => {
@@ -59,7 +60,7 @@ const DefaultConfig = {
 /**
  * Configuration
  */
-class Config {
+class Configuration {
   
   
   constructor() {
@@ -94,7 +95,7 @@ class Config {
    * Add a repo to the config
    *
    * @param url
-   * @returns {Config}
+   * @returns {Configuration}
    */
   addRepository(url) {
     this.data.repos =
@@ -110,7 +111,7 @@ class Config {
    * Remove a repository from the config
    *
    * @param url
-   * @returns {Config}
+   * @returns {Configuration}
    */
   removeRepository(url) {
     this.data.repos = [
@@ -146,17 +147,22 @@ class Config {
 }
 
 
-module.exports = {
-  Config: new Config(),
+export const Config = new Configuration()
+export const Environment = {
+  CUNIT_PROC_COUNT: OS.cpus().length
+}
+
+export const Paths = {
+  CUnitRoot,
+  CUnitRepo,
+  CMake,
+  Make,
+  Git
+}
+
+export default {
   IsWindows,
-  Environment: {
-    CUNIT_PROC_COUNT: OS.cpus().length
-  },
-  Paths: {
-    CUnitRoot,
-    CUnitRepo,
-    CMake,
-    Make,
-    Git
-  }
+  Config,
+  Paths,
+  Environment
 }

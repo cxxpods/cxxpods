@@ -111,6 +111,7 @@ export async function makeCMakeFile(project) {
     cmakeContext = {
       android: android === true,
       toolsRoot: toolsRoot.replace(/\\/g,'/'),
+      defaultBuildTypeName: cmakeBuildTypes[0].name,
       buildTypes: cmakeBuildTypes,
       buildTypeNames: cmakeBuildTypes.map(buildType => buildType.name).join(";")
     }

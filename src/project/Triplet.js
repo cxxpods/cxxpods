@@ -1,6 +1,7 @@
 import {CompilerType, Processor, ProcessorNodeMap, System} from "./BuildConstants"
-import {IsWindows} from "../Config"
 import OS from 'os'
+
+const {IsWindows} = require("../Config")
 
 /**
  * Triplet
@@ -37,7 +38,9 @@ function makeHostTriplet() {
   return new Triplet(
     system,
     ProcessorNodeMap[arch],
-    system ===  System.Darwin ? CompilerType.AppleClang : CompilerType.GNU
+    system === System.Windows ? CompilerType.MSVC :
+      System.Darwin ? CompilerType.AppleClang :
+        CompilerType.GNU
   )
 }
 

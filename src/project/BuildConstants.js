@@ -25,5 +25,6 @@ export const ProcessorNodeMap = {
 export const CompilerType = {
   GNU: "GNU",
   Unknown: "Unknown",
-  AppleClang: "AppleClang"
+  AppleClang: "AppleClang",
+  MSVC: "MSVC"
 }

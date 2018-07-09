@@ -16,7 +16,10 @@
     "compile": "npx babel src/ --out-dir dist  --source-maps inline ",
     "watch": "npx babel src/ --watch --out-dir dist  --source-maps inline",
     "prepublish": "npm run compile",
-    "test": "jest"
+    "test": "npm run compile && jest"
+  },
+  "jest": {
+    "modulePaths": ["<rootDir>/dist/"]
   },
   "bin": {
     "cunit": "./bin/cunit.js"
