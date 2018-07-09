@@ -3,8 +3,11 @@ import OS from 'os'
 import * as sh from 'shelljs'
 import {ExeSuffix} from "../Config"
 import * as _ from 'lodash'
+import GetLogger from "../Log"
 
-const {IsWindows} = require("../Config")
+const
+  log = GetLogger(__filename),
+  {IsWindows} = require("../Config")
 
 /**
  * Triplet
@@ -55,7 +58,7 @@ function makeHostTriplet() {
       if (result.stdout.toLowerCase().indexOf("clang") > -1)
         compilerType = CompilerType.Clang
       else
-        log.warn(`Unable to detect compiler type, using: ${compilerType}`)
+        log.info(`Unable to detect compiler type, using: ${compilerType}`)
     }
   }
   
