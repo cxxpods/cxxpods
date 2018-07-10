@@ -11,7 +11,7 @@ import OS from 'os'
 import Git from "simple-git/promise"
 import {getValue} from "typeguard"
 import _ from 'lodash'
-import {CUnitExtensions} from "../Constants"
+import {CXXPodsExtensions} from "../Constants"
 import {processTemplate} from "../util/Template"
 import Tmp from "tmp"
 import BuildType from "./BuiltType"
@@ -75,13 +75,13 @@ async function checkoutDependencyAndUpdateSource(project, dep, buildConfig) {
 }
 
 /**
- * Find a cunit config file
+ * Find a cxxpods config file
  *
  * @param path
  * @param name
  */
-export function findCUnitConfigFile(path, name = 'cunit') {
-  return CUnitExtensions.map(ext => `${path}/${name}${ext}`).find(filename => Fs.existsSync(filename))
+export function findCXXPodsConfigFile(path, name = 'cxxpods') {
+  return CXXPodsExtensions.map(ext => `${path}/${name}${ext}`).find(filename => Fs.existsSync(filename))
 }
 
 
@@ -97,9 +97,9 @@ export async function makeCMakeFile(project) {
   
   
   const
-    cmakeOutputDir = `${projectDir}/.cunit`,
-    cmakeOutputFile = `${cmakeOutputDir}/cunit.cmake`,
-    cmakeOutputToolchainFile = `${cmakeOutputDir}/cunit.toolchain.cmake`,
+    cmakeOutputDir = `${projectDir}/.cxxpods`,
+    cmakeOutputFile = `${cmakeOutputDir}/cxxpods.cmake`,
+    cmakeOutputToolchainFile = `${cmakeOutputDir}/cxxpods.toolchain.cmake`,
     
     cmakeBuildTypes = buildTypes.map(buildType => ({
       ...buildType,
@@ -118,10 +118,10 @@ export async function makeCMakeFile(project) {
   
   File.mkdirs(cmakeOutputDir)
   log.info(`Writing CMake file: ${cmakeOutputFile}`)
-  processTemplate(File.readAsset("cunit.cmake.hbs"), cmakeContext, cmakeOutputFile)
+  processTemplate(File.readAsset("cxxpods.cmake.hbs"), cmakeContext, cmakeOutputFile)
   
   log.info(`Writing CMake Toolchain file: ${cmakeOutputToolchainFile}`)
-  processTemplate(File.readAsset("cunit.toolchain.cmake.hbs"), cmakeContext, cmakeOutputToolchainFile)
+  processTemplate(File.readAsset("cxxpods.toolchain.cmake.hbs"), cmakeContext, cmakeOutputToolchainFile)
 }
 
 
@@ -135,7 +135,7 @@ export async function makeCMakeFile(project) {
 async function makeDependencyCMakeFile(project, buildConfig) {
   const
     {src, type: buildType} = buildConfig,
-    configFile = findCUnitConfigFile(src),
+    configFile = findCXXPodsConfigFile(src),
     {toolsRoot} = project
   
   if (!configFile) {
@@ -143,8 +143,8 @@ async function makeDependencyCMakeFile(project, buildConfig) {
   }
   
   const
-    cmakeOutputDir = `${src}/.cunit`,
-    cmakeOutputFile = `${cmakeOutputDir}/cunit.cmake`,
+    cmakeOutputDir = `${src}/.cxxpods`,
+    cmakeOutputFile = `${cmakeOutputDir}/cxxpods.cmake`,
     cmakeContext = {
       ...buildType,
       name: buildType.name.replace(/-/g, "_").toLowerCase(),
@@ -156,7 +156,7 @@ async function makeDependencyCMakeFile(project, buildConfig) {
   
   log.info(`Writing CMake file: ${cmakeOutputFile}`)
   File.mkdirs(cmakeOutputDir)
-  processTemplate(File.readAsset("cunit.dep.cmake.hbs"), cmakeContext, cmakeOutputFile)
+  processTemplate(File.readAsset("cxxpods.dep.cmake.hbs"), cmakeContext, cmakeOutputFile)
 }
 
 /**
@@ -171,7 +171,7 @@ async function configureDependency(project, dep, buildConfig) {
   const
     {src, build, type} = buildConfig
   
-  // MAKE CUNIT CMAKE FILE IF REQUIRED
+  // MAKE CXXPODS CMAKE FILE IF REQUIRED
   await makeDependencyCMakeFile(project, buildConfig)
   
   // NOW CONFIGURE THE BUILD
@@ -309,7 +309,7 @@ async function buildDependencyManual(project, dep, buildConfig) {
  */
 function hasDependencyChanged(dep, buildConfig) {
   const
-    buildStampFile = `${buildConfig.build}/.cunit-build-stamp`,
+    buildStampFile = `${buildConfig.build}/.cxxpods-build-stamp`,
     exists = File.exists(buildStampFile),
     existingBuildStamp = exists ? File.readFile(buildStampFile) : null,
     newBuildStamp = JSON.stringify(dep.toBuildStamp(buildConfig))
@@ -366,10 +366,10 @@ function postDependencyInstall(project, dep, buildConfig) {
     {findTemplate: cmakeFindTemplate, toolTemplate: cmakeToolTemplate} = cmakeConfig,
     
     cmakeContext = {
-      cunitRootDir: rootDir,
-      cunitLibDir: `${rootDir}/lib`,
-      cunitIncludeDir: `${rootDir}/include`,
-      cunitCMakeDir: `${rootDir}/lib/cmake`
+      cxxpodsRootDir: rootDir,
+      cxxpodsLibDir: `${rootDir}/lib`,
+      cxxpodsIncludeDir: `${rootDir}/include`,
+      cxxpodsCMakeDir: `${rootDir}/lib/cmake`
     },
     
     processCMakeTemplate = (cmakeTemplate) => {
@@ -393,7 +393,7 @@ function postDependencyInstall(project, dep, buildConfig) {
 }
 
 function writeDependencyBuildStamp(dep, buildConfig) {
-  const buildStampFile = `${buildConfig.build}/.cunit-build-stamp`
+  const buildStampFile = `${buildConfig.build}/.cxxpods-build-stamp`
   File.mkdirParents(buildStampFile)
   File.writeFileJSON(buildStampFile, dep.toBuildStamp(buildConfig))
 }

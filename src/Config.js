@@ -35,16 +35,16 @@ if (!Home || _.isEmpty(Home))
   throw "No HOME env variable found"
 
 const
-  CUnitRoot = `${Home}/.cunit`,
-  CUnitRepo = `${CUnitRoot}/repos`,
-  CUnitConfigFile = `${CUnitRoot}/cunit.json`,
-  CUnitGithubURL = "https://github.com/cunit",
-  CUnitsDefaultRepo = `${CUnitGithubURL}/cunits.git`
+  CXXPodsRoot = `${Home}/.cxxpods`,
+  CXXPodsRepo = `${CXXPodsRoot}/repos`,
+  CXXPodsConfigFile = `${CXXPodsRoot}/cxxpods.json`,
+  CXXPodsGithubURL = "https://github.com/cxxpods",
+  CXXPodsDefaultRepo = `${CXXPodsGithubURL}/cxxpods-registry.git`
   
   
 
-if (!mkdirs(CUnitRepo)) {
-  throw `Unable to create repo path: ${CUnitRepo}`
+if (!mkdirs(CXXPodsRepo)) {
+  throw `Unable to create repo path: ${CXXPodsRepo}`
 }
 
 /**
@@ -78,18 +78,18 @@ class Configuration {
    * @returns {boolean}
    */
   load() {
-    if (!exists(CUnitConfigFile)) {
+    if (!exists(CXXPodsConfigFile)) {
       return false
     }
     
-    this.data = readFileJSON(CUnitConfigFile)
+    this.data = readFileJSON(CXXPodsConfigFile)
   }
   
   /**
    * Save configuration
    */
   save() {
-    writeFileJSON(CUnitConfigFile,this.data,true)
+    writeFileJSON(CXXPodsConfigFile,this.data,true)
   }
   
   /**
@@ -139,7 +139,7 @@ class Configuration {
    * @returns {*[]}
    */
   get repos() {
-    return [... this.data.repos, CUnitsDefaultRepo]
+    return [... this.data.repos, CXXPodsDefaultRepo]
   }
   
   get isRepoUpdateNeeded() {
@@ -150,12 +150,12 @@ class Configuration {
 
 export const Config = new Configuration()
 export const Environment = {
-  CUNIT_PROC_COUNT: OS.cpus().length
+  CXXPODS_PROC_COUNT: OS.cpus().length
 }
 
 export const Paths = {
-  CUnitRoot,
-  CUnitRepo,
+  CXXPodsRoot,
+  CXXPodsRepo,
   CMake,
   Make,
   Git

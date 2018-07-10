@@ -123,7 +123,7 @@ export default class BuildType {
     const
       rootProject = project.rootProject || project
     
-    this.dir = fixPath(isTool ? project.toolsDir : `${rootProject.projectDir}/.cunit/${this.toString()}`)
+    this.dir = fixPath(isTool ? project.toolsDir : `${rootProject.projectDir}/.cxxpods/${this.toString()}`)
     this.rootDir = fixPath(isTool ? project.toolsRoot : `${this.dir}/root`)
     
     File.mkdirs(this.rootDir)
@@ -151,10 +151,10 @@ export default class BuildType {
       {},
       this.toolchain.toScriptEnvironment(rootProject, project),
       {
-        CUNIT_BUILD_ROOT: this.rootDir,
-        CUNIT_BUILD_LIB: `${this.rootDir}/lib`,
-        CUNIT_BUILD_INCLUDE: `${this.rootDir}/include`,
-        CUNIT_BUILD_CMAKE: `${this.rootDir}/lib/cmake`,
+        CXXPODS_BUILD_ROOT: this.rootDir,
+        CXXPODS_BUILD_LIB: `${this.rootDir}/lib`,
+        CXXPODS_BUILD_INCLUDE: `${this.rootDir}/include`,
+        CXXPODS_BUILD_CMAKE: `${this.rootDir}/lib/cmake`,
       })
   }
   

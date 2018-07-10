@@ -1,3 +1,3 @@
 module.exports = {
-  CUnitExtensions: ['.js','.yml','.yaml','.json']
+  CXXPodsExtensions: ['.js','.yml','.yaml','.json']
 }

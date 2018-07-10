@@ -50,18 +50,21 @@ function makeHostTriplet() {
   
   let compilerType = IsWindows ? CompilerType.MSVC : CompilerType.GCC
   
-  if (!_.isEmpty(ccExe)) {
-    const
-      result = sh.exec(`${ccExe} --version`,{silent:true})
+  try {
+    if (!_.isEmpty(ccExe)) {
+      const
+        result = sh.exec(`${ccExe} --version`, {silent: true})
     
-    if (result.code === 0) {
-      if (result.stdout.toLowerCase().indexOf("clang") > -1)
-        compilerType = CompilerType.Clang
-      else
-        log.info(`Unable to detect compiler type, using: ${compilerType}`)
+      if (result.code === 0) {
+        if (result.stdout.toLowerCase().indexOf("clang") > -1)
+          compilerType = CompilerType.Clang
+        else
+          log.info(`Unable to detect compiler type, using: ${compilerType}`)
+      }
     }
+  } catch (ex) {
+    log.warn(`Unable to autodetect compiler, using defaults`, ex)
   }
-  
   
   return new Triplet(
     system,

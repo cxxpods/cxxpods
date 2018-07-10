@@ -1,11 +1,11 @@
 {
-  "name": "cunit-manager",
-  "description": "CUnit enables simple CMake dependency management",
+  "name": "cxxpods",
+  "description": "CXXPods enables simple CMake dependency management",
   "license": "MIT",
   "version": "0.0.15",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cunit/cunit.git"
+    "url": "https://github.com/cxxpods/cxxpods.git"
   },
   "files": [
     "bin/**",
@@ -24,7 +24,8 @@
     ]
   },
   "bin": {
-    "cunit": "./bin/cunit.js"
+    "cxxpods": "./bin/cxxpods.js",
+    "cpods": "./bin/cxxpods.js"
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",

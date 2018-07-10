@@ -7,13 +7,13 @@ import Path from 'path'
 const log = GetLogger(__filename)
 
 function showVersion() {
-   log.info(`cunit version ${File.readFileJson(Path.resolve(__dirname,"..","..","package.json")).version}`)
+   log.info(`cxxpods version ${File.readFileJson(Path.resolve(__dirname,"..","..","package.json")).version}`)
 }
 
 export default function (Yargs) {
   return Yargs.command({
     command: "version",
-    description: "cunit version",
+    description: "cxxpods version",
     handler: () => showVersion()
   })
 }

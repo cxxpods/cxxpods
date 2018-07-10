@@ -57,7 +57,7 @@ export function isRepoLocal(url) {
  * @returns {string}
  */
 export function getRepoLocalPath(url) {
-  return `${Paths.CUnitRepo}/${parseRepoName(url)}`
+  return `${Paths.CXXPodsRepo}/${parseRepoName(url)}`
 }
 
 /**
@@ -111,7 +111,7 @@ export async function updateRepo(url) {
       return true
     } else {
       const
-        git = Git(Paths.CUnitRepo)
+        git = Git(Paths.CXXPodsRepo)
       
       log.info(`Cloning ${url} -> ${repoLocalPath}`)
       await git.clone(url,repoLocalPath,{

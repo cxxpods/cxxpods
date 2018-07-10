@@ -133,14 +133,14 @@ export default class Toolchain {
       cmakeToolchainTmpFile = Tmp.fileSync({mode: 777, prefix: `${this.toString()}-`, postfix: '.cmake'})
   
     sh.exec(`chmod 777 ${cmakeToolchainTmpFile.name}`)
-    processTemplate(File.readAsset("cunit.toolchain.cmake.hbs"),cmakeContext,cmakeToolchainTmpFile.name)
+    processTemplate(File.readAsset("cxxpods.toolchain.cmake.hbs"),cmakeContext,cmakeToolchainTmpFile.name)
     
-    sh.env["CUNIT_EXPORT_FILE"] = outputFile
+    sh.env["CXXPODS_EXPORT_FILE"] = outputFile
     
-    const result = sh.exec(`${Paths.CMake} -DCUNIT_TOOLCHAIN_EXPORT=ON ${toolchainArgs.join(" ")} -P ${cmakeToolchainTmpFile.name}`)
+    const result = sh.exec(`${Paths.CMake} -DCXXPODS_TOOLCHAIN_EXPORT=ON ${toolchainArgs.join(" ")} -P ${cmakeToolchainTmpFile.name}`)
     Assert.ok(result.code === 0,`Failed to get toolchain export: ${outputFile}`)
     
-    sh.env["CUNIT_EXPORT_FILE"] = null
+    sh.env["CXXPODS_EXPORT_FILE"] = null
     
     
     // ASSIGN TO EXPORT PROPS

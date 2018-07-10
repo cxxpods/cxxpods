@@ -41,7 +41,7 @@ export default class Project {
     this.projectDir = path
     
     this.isTool = isTool
-    this.toolsDir = `${path}/.cunit/tools`
+    this.toolsDir = `${path}/.cxxpods/tools`
     this.toolsRoot = `${this.toolsDir}/root`
     this.toolsBuildType = rootProject ?
       rootProject.toolsBuildType :
@@ -53,18 +53,18 @@ export default class Project {
     this.buildTypes = getValue(() => rootProject.buildTypes, [])
     
     // LOAD THE PROJECT CONFIGURATION
-    const cunitFile = require("./Configure").findCUnitConfigFile(path)
-    if (!cunitFile)
+    const cxxpodsFile = require("./Configure").findCXXPodsConfigFile(path)
+    if (!cxxpodsFile)
       throw `No cmake file found in: ${path}`
     
     // BUILD CONFIGURATION
-    const cunitFiles = [cunitFile, `${path}/cunit.local.yml`]
+    const cxxpodsFiles = [cxxpodsFile, `${path}/cxxpods.local.yml`]
     
-    cunitFiles.forEach(file => {
+    cxxpodsFiles.forEach(file => {
       if (File.exists(file)) {
         this.loadConfigFile(file)
       } else {
-        log.info(`CUnit file (${file}) does not exist`)
+        log.info(`CXXPods file (${file}) does not exist`)
       }
     })
     
