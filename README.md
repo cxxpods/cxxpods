@@ -1,6 +1,6 @@
 ![logo](art/logo.png)
 
-# cxxpods
+# CXXPODS 
 
 CXXPods is the answer to c/c++ dependency management
 in the CMake world.  It comes as an
@@ -19,7 +19,7 @@ to create shared lib recipes and publish them.
 Furthermore, you can issue `global` cmake override flags converting
 all dependencies to shared libs 
 
-## install
+## Install
 
 cu is implemented in JS for flexibility, so installation 
 anywhere is dead simple.
