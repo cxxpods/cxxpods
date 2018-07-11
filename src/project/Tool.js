@@ -1,4 +1,5 @@
 import GetLogger from '../Log'
+import {realRootProject} from "../util/ProjectUtils"
 
 const
   {resolveDependency} = require("../repo/Repo"),
@@ -73,6 +74,8 @@ export default class Tool {
   }
   
   static makeBuildConfigs(rootProject,name) {
+    rootProject = realRootProject(rootProject)
+    
     return [{
       type: rootProject.toolsBuildType,
       src: `${rootProject.toolsDir}/${name}-src`,
@@ -83,6 +86,8 @@ export default class Tool {
   constructor(rootProject,name,version) {
     const Project = require("./Project").default
   
+    rootProject = realRootProject(rootProject)
+    
     this.name = name
     this.version = version
     this.resolved = false

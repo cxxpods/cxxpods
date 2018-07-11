@@ -5,6 +5,7 @@ import OS from 'os'
 import File from "../util/File"
 import * as _ from 'lodash'
 import * as SemVer from 'semver'
+import {realRootProject} from "../util/ProjectUtils"
 const
   log = GetLogger(__filename)
 
@@ -117,13 +118,8 @@ export default class Dependency {
       [depConfig,version] = versionOrConfig && typeof versionOrConfig === 'object' ?
         [versionOrConfig, versionOrConfig.version] :
         [{}, versionOrConfig]
-      
-    let realRootProject = rootProject
-    while(realRootProject.rootProject) {
-      realRootProject = realRootProject.rootProject
-    }
-    
-    rootProject = realRootProject
+  
+    rootProject = realRootProject(rootProject)
     
     const
       Project = require("./Project").default,

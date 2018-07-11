@@ -166,8 +166,8 @@ export default class BuildType {
         CMAKE_MODULE_PATH: `${this.rootDir}/lib/cmake`,
         CMAKE_LIBRARY_PATH: `${this.rootDir}/lib`,
         CMAKE_INCLUDE_PATH: `${this.rootDir}/include`,
-        CMAKE_C_FLAGS: `-I${this.rootDir}/include -fPIC -fPIE`,
-        CMAKE_CXX_FLAGS: `-I${this.rootDir}/include -fPIC -fPIE`,
+        CMAKE_C_FLAGS: `-I${this.rootDir}/include`,
+        CMAKE_CXX_FLAGS: `-I${this.rootDir}/include`,
         CMAKE_EXE_LINKER_FLAGS: `-L${this.rootDir}/lib`
       })
   }

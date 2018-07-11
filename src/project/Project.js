@@ -5,6 +5,7 @@ import GetLogger from '../Log'
 import Tool from './Tool'
 import {getValue} from "typeguard"
 import Dependency from "./Dependency"
+import {realRootProject} from "../util/ProjectUtils"
 
 const
   sh = require("shelljs"),
@@ -30,12 +31,8 @@ function resolveConfigVariables(project, context = null, processedConfigs = []) 
 export default class Project {
   constructor(path = sh.pwd(), rootProject = null, isTool = false, depConfig = {}) {
     
-    let realRootProject = rootProject
-    while (realRootProject && realRootProject.rootProject) {
-      realRootProject = realRootProject.rootProject
-    }
-    
-    rootProject = realRootProject
+   
+    rootProject = realRootProject(rootProject)
     
     this.rootProject = rootProject
     this.projectDir = path
