@@ -1,8 +1,6 @@
 ![logo](../art/logo.png)
 
-# CXXPODS
-
-## Overview
+# Overview
 
 CXXPods is a command line tool that allows for both simple c/c++ and very complex multi-platform, cross-compiling dependency managerment.  
 
