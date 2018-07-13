@@ -1,4 +1,4 @@
-## Cross-Compiling "Toolchains"
+## Cross-Compiling  & Toolchains
 
 Create your standard cmake toolchain file and
 use it as follows:

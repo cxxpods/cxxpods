@@ -7,6 +7,7 @@
     "type": "git",
     "url": "https://github.com/cxxpods/cxxpods.git"
   },
+  "main": "bin/cxxpods.js",
   "files": [
     "bin/**",
     "src/**",
@@ -17,6 +18,10 @@
     "watch": "npx babel src/ --watch --out-dir dist  --source-maps inline",
     "prepublish": "npm run compile",
     "test": "npm run compile && jest"
+  },
+  "pkg": {
+    "scripts": "dist/**",
+    "assets": "src/assets/**"
   },
   "jest": {
     "modulePaths": [
