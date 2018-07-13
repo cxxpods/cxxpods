@@ -150,7 +150,7 @@ class Configuration {
 
 export const Config = new Configuration()
 export const Environment = {
-  CXXPODS_PROC_COUNT: OS.cpus().length
+  CXXPODS_PROC_COUNT: Math.max(1,Math.floor(OS.cpus().length / 2))
 }
 
 export const Paths = {

@@ -5,6 +5,7 @@ import Dependency from "./Dependency"
 import Triplet from "./Triplet"
 import File, {fixPath} from "../util/File"
 import GetLogger from "../Log"
+import {Environment} from "../Config"
 
 const log = GetLogger(__filename)
 
@@ -149,6 +150,7 @@ export default class BuildType {
   toScriptEnvironment(rootProject, project) {
     return _.merge(
       {},
+      Environment,
       this.toolchain.toScriptEnvironment(rootProject, project),
       {
         CXXPODS_BUILD_ROOT: this.rootDir,
@@ -158,6 +160,12 @@ export default class BuildType {
       })
   }
   
+  /**
+   * Create a CMakeOptions map for the build type
+   *
+   * @param rootProject
+   * @param project
+   */
   toCMakeOptions(rootProject, project) {
     return _.merge({},
       this.toolchain.toCMakeOptions(rootProject, project),
@@ -172,6 +180,11 @@ export default class BuildType {
       })
   }
   
+  /**
+   * Create a build stamp (like eTag) for caching purposes
+   *
+   * @returns {{toolchain: ({toolchain, cmakeOptions, dir}|{triplet: string, file: *}|{name, version, dir, buildConfig, buildType, cmakeConfig, cmakeFindTemplateTimestamp}|{name, version, dir, buildConfig, buildType, cmakeConfig, srcTimestamp, dirTimestamp}), cmakeOptions: *, dir: *}}
+   */
   toBuildStamp() {
     return {
       toolchain: this.toolchain.toBuildStamp(),
@@ -180,6 +193,11 @@ export default class BuildType {
     }
   }
   
+  /**
+   * Implement string representation of BuildType
+   *
+   * @returns {string}
+   */
   toString() {
     return this.name
   }

@@ -5,7 +5,7 @@ import GetLogger from '../Log'
 import Tool from './Tool'
 import {getValue} from "typeguard"
 import Dependency from "./Dependency"
-import {realRootProject} from "../util/ProjectUtils"
+import {findCXXPodsConfigFile, realRootProject} from "../util/ProjectUtils"
 
 const
   sh = require("shelljs"),
@@ -50,7 +50,7 @@ export default class Project {
     this.buildTypes = getValue(() => rootProject.buildTypes, [])
     
     // LOAD THE PROJECT CONFIGURATION
-    const cxxpodsFile = require("./Configure").findCXXPodsConfigFile(path)
+    const cxxpodsFile = findCXXPodsConfigFile(path)
     if (!cxxpodsFile)
       throw `No cmake file found in: ${path}`
     
