@@ -5,8 +5,8 @@ defaults: &defaults
   docker:
     - image: circleci/node:10.5.0
   environment:
-    GOROOT: ${HOME}/goroot
-    GOPATH: ${HOME}/go
+    GOROOT: /home/circleci/goroot
+    GOPATH: /home/circleci/go
 jobs:
   build:
     <<: *defaults
