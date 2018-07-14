@@ -22,7 +22,14 @@ jobs:
             PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
             export PATH
 
-            env
+            if [ -e build ];then
+              rm -Rf build
+            fi
+
+            if [ -e dist ];then
+              rm -Rf dist
+            fi
+
             mkdir -p ${GOPATH}
             rm -Rf ${GOROOT}
 
@@ -39,16 +46,6 @@ jobs:
 
             go get github.com/tcnksm/ghr
       - run: npm install
-      - run: npm run installers
-      - run: |
-          PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
-          VERSION=$(node scripts/get-version.js)
-          env
-
-          export PATH VERSION
-
-          cd ~/repo
-          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -recreate v${VERSION} ./build/artifacts/
       - save_cache:
           paths:
             - node_modules
@@ -72,6 +69,20 @@ jobs:
       - run:
           name: Authenticate with registry
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/repo/.npmrc
+      - run: |
+          cd ~/repo
+
+          PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
+          VERSION=$(node scripts/get-version.js)
+          export PATH VERSION
+
+          echo "Cleaning"
+          rm -Rf build dist || true
+
+          echo "Making installers"
+          npm run installers
+
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -recreate v${VERSION} ./build/artifacts/
       - run:
           name: Publish package
           command: npm publish
