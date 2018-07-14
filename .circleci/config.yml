@@ -20,7 +20,11 @@ jobs:
       - run: npm install
       - run: npm run installers
       - run: |
+          GOPATH=${HOME}/go
           VERSION=$(node scripts/get-version.js)
+          mkdir ${GOPATH}
+          export GOPATH
+
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/artifacts/
       - save_cache:
           paths:
