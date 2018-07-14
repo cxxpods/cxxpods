@@ -16,11 +16,12 @@ jobs:
           - v1-dependencies-
       - run:
           name: Get dependencies
-          command: sudo apt-get update && sudo apt-get install -y cmake ruby ruby-dev rubygems golang build-essential && sudo gem install --no-ri --no-rdoc fpm
+          command: sudo apt-get update && sudo apt-get install -y cmake ruby ruby-dev rubygems golang build-essential && sudo gem install --no-ri --no-rdoc fpm && sudo go get github.com/tcnksm/ghr
       - run: npm install
+      - run: npm run installers
       - run: |
-          npm run installers
-          go get github.com/tcnksm/ghr
+          VERSION=$(node scripts/get-version.js)
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/artifacts/
       - save_cache:
           paths:
             - node_modules

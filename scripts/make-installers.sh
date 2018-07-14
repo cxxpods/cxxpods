@@ -6,6 +6,7 @@ BASE=$(realpath $(dirname $(dirname $(realpath ${0}))))
 VERSION=$(node ${BASE}/scripts/get-version.js)
 FPM=$(which fpm)
 BUILD=${BASE}/build
+ARTIFACTS=${BUILD}/artifacts
 
 LINUX_APP=${BUILD}/cxxpods-linux
 LINUX_ROOT=${BUILD}/linux-root
@@ -39,7 +40,7 @@ makeLinux() {
 		-n cxxpods \
 		-v ${VERSION} \
 		-C ${LINUX_ROOT} \
-		-p ${BUILD}/cxxpods_VERSION_ARCH.deb \
+		-p ${ARTIFACTS}/cxxpods_VERSION_ARCH.deb \
 		usr/bin
 
 }
@@ -59,14 +60,19 @@ makeMacos() {
 		-n cxxpods \
 		-v ${VERSION} \
 		-C ${MACOS_ROOT} \
-		-p ${BUILD}/cxxpods_VERSION_ARCH.pkg \
+		-p ${ARTIFACTS}/cxxpods_VERSION_ARCH.pkg \
 		usr/local/bin
 
 }
 
+mkdir -p ${ARTIFACTS}
 
 makeLinux
-makeMacos
+
+if [ "$(which pkgbuild)" != "" ]; then
+	echo "Building package for MacOS"
+	makeMacos
+fi
 
 
 
