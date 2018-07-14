@@ -16,7 +16,17 @@ jobs:
           - v1-dependencies-
       - run:
           name: Get dependencies
-          command: sudo apt-get update && sudo apt-get install -y cmake ruby ruby-dev rubygems golang build-essential && sudo gem install --no-ri --no-rdoc fpm && sudo go get github.com/tcnksm/ghr
+          command: |
+            GOPATH=${HOME}/go
+            VERSION=$(node scripts/get-version.js)
+            mkdir ${GOPATH}
+
+            export GOPATH
+
+            sudo apt-get update
+            sudo apt-get install -y cmake ruby ruby-dev rubygems golang build-essential
+            sudo gem install --no-ri --no-rdoc fpm
+            go get github.com/tcnksm/ghr
       - run: npm install
       - run: npm run installers
       - run: |
