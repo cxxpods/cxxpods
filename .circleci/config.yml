@@ -59,7 +59,7 @@ jobs:
           cd ${HOME}
 
           PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
-          VERSION=$(node scripts/get-version.js)
+          VERSION=$(node repo/scripts/get-version.js)
           export PATH VERSION
 
           rm -Rf ${GOROOT} || true
