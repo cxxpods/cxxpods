@@ -16,35 +16,6 @@ jobs:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
           - v1-dependencies-
-      - run:
-          name: Get dependencies
-          command: |
-            PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
-            export PATH
-
-            if [ -e build ];then
-              rm -Rf build
-            fi
-
-            if [ -e dist ];then
-              rm -Rf dist
-            fi
-
-            mkdir -p ${GOPATH}
-            rm -Rf ${GOROOT}
-
-            sudo apt-get update
-            sudo apt-get install -y cmake ruby ruby-dev rubygems build-essential wget
-            sudo gem install --no-ri --no-rdoc fpm
-
-            cd ${HOME}
-            mkdir -p download
-            cd download
-            wget https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz
-            tar xvfz go1.10.3.linux-amd64.tar.gz
-            mv go ../goroot
-
-            go get github.com/tcnksm/ghr
       - run: npm install
       - save_cache:
           paths:
@@ -59,6 +30,21 @@ jobs:
       - attach_workspace:
           at: ~/repo
       - run:
+          name: Get dependencies
+          command: |
+            PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
+            export PATH
+
+            echo "Cleaning"
+            rm -Rf build dist || true
+
+            mkdir -p ${GOPATH}
+            rm -Rf ${GOROOT} || true
+
+            sudo apt-get update
+            sudo apt-get install -y cmake ruby ruby-dev rubygems build-essential wget
+            sudo gem install --no-ri --no-rdoc fpm
+      - run:
           name: test
           command: npm test
   deploy:
@@ -70,12 +56,28 @@ jobs:
           name: Authenticate with registry
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/repo/.npmrc
       - run: |
-          cd ~/repo
+          cd ${HOME}
 
           PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
           VERSION=$(node scripts/get-version.js)
           export PATH VERSION
 
+          rm -Rf ${GOROOT} || true
+
+          sudo apt-get update
+          sudo apt-get install -y cmake ruby ruby-dev rubygems build-essential wget
+          sudo gem install --no-ri --no-rdoc fpm
+
+          cd ${HOME}
+          mkdir -p download
+          cd download
+          wget https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz
+          tar xvfz go1.10.3.linux-amd64.tar.gz
+          mv go ../goroot
+
+          go get github.com/tcnksm/ghr
+
+          cd ~/repo
           echo "Cleaning"
           rm -Rf build dist || true
 
