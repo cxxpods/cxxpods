@@ -20,9 +20,9 @@ jobs:
             GOROOT=${HOME}/goroot
             GOPATH=${HOME}/go
             PATH=${GOROOT}/bin:${PATH}
-            mkdir ${GOPATH}
             export GOPATH GOROOT PATH
 
+            mkdir ${GOPATH}
             sudo apt-get update
             sudo apt-get install -y cmake ruby ruby-dev rubygems build-essential wget
             sudo gem install --no-ri --no-rdoc fpm
@@ -38,10 +38,11 @@ jobs:
       - run: npm install
       - run: npm run installers
       - run: |
+          GOROOT=${HOME}/goroot
           GOPATH=${HOME}/go
+          PATH=${GOROOT}/bin:${PATH}
           VERSION=$(node scripts/get-version.js)
-          mkdir ${GOPATH}
-          export GOPATH
+          export GOPATH GOROOT PATH VERSION
 
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/artifacts/
       - save_cache:
