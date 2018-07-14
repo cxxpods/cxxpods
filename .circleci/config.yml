@@ -87,7 +87,8 @@ jobs:
           cd ~/repo/build
           zip artifacts/cxxpods-macos.zip cxxpods-macos
           zip artifacts/cxxpods-linux.zip cxxpods-linux
-
+          
+          cd ~/repo
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -recreate v${VERSION} ./build/artifacts/
       - run:
           name: Publish package
