@@ -2,7 +2,7 @@
   "name": "cxxpods",
   "description": "CXXPods enables simple CMake dependency management",
   "license": "MIT",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "repository": {
     "type": "git",
     "url": "https://github.com/cxxpods/cxxpods.git"
