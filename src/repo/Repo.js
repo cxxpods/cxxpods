@@ -5,7 +5,7 @@ import * as Fs from 'fs'
 import * as sh from 'shelljs'
 import * as _ from 'lodash'
 import Git from 'simple-git/promise'
-
+import * as Yaml from 'js-yaml'
 
 const log = GetLogger(__filename)
 
@@ -178,6 +178,30 @@ export function removeRepo(url) {
     Config.removeRepository(url)
     log.info(`Successfully removed ${url}`)
   }
+}
+
+
+/**
+ * Create an index for a given repo
+ *
+ * @param url
+ */
+export function indexRepo(url) {
+  const
+    localPath = getRepoLocalPath(url),
+    recipesFile = `${localPath}/PODS.json`
+  
+  log.info(`Indexing repo @ ${localPath}`)
+  
+  const recipes = Fs.readdirSync(localPath)
+    .filter(name => !name.startsWith("."))
+    .map(name => `${localPath}/${name}/cxxpods.yml`)
+    .filter(File.exists)
+    .map(File.readFileYaml)
+    .reduce((recipes,recipe) => [...recipes,recipe],[])
+  
+  log.info(`Writing ${recipes.length} recipes to ${recipesFile}`)
+  File.writeFileJSON(recipesFile,recipes)
 }
 
 /**

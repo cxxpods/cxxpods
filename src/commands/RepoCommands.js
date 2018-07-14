@@ -1,5 +1,5 @@
 
-import {addRepo,removeRepo,updateRepos,listRepos}  from "../repo/Repo"
+import {addRepo, removeRepo, updateRepos, listRepos, indexRepo} from "../repo/Repo"
 
 
 module.exports = (Yargs) => {
@@ -8,7 +8,7 @@ module.exports = (Yargs) => {
     description: "Manage repos",
     builder: (Yargs) => {
       Yargs
-      // ADD COMMAND
+        // ADD COMMAND
         .command({
           command: "add <url>",
           desc: "Add a new repo",
@@ -21,6 +21,21 @@ module.exports = (Yargs) => {
               .demand(0, "You must provide a url")
           },
           handler: argv => addRepo(argv.url)
+        })
+        
+        // INDEX COMMAND
+        .command({
+          command: "index <url>",
+          desc: "Index a repo",
+          builder: yargs => {
+            yargs
+              .positional("url", {
+                describe: "Git repo for pods",
+                type: 'string'
+              })
+              .demand(0, "You must provide a url")
+          },
+          handler: argv => indexRepo(argv.url)
         })
         
         // REMOVE COMMAND
