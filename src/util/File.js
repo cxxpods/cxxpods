@@ -15,7 +15,9 @@ export function isDirectory(path) {
 }
 
 export function mkdirs(path) {
-  sh.mkdir('-p',path)
+  if (!isDirectory(path))
+    sh.mkdir('-p',path)
+  
   return isDirectory(path)
 }
 
