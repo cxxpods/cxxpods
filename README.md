@@ -16,8 +16,18 @@ In order to be as comprehensive as possible, there is a single enforced guidelin
 
 ## Install
 
-CXXPODS is implemented in JS for flexibility, so installation  anywhere is dead simple.
+### Linux, macOS
 
+On linux or macOS you can run the following snippet to install a binary version of cxxpods, no need to install node, npm or anything else. It will be installed to `/usr/local/bin`
+
+```bash
+curl -s https://raw.githubusercontent.com/cxxpods/cxxpods/master/scripts/client-install.sh | bash
+```
+
+### NPM (Windows, Linux, macOS)
+
+You can also install via [npm](http://nodejs.org) if you have [node](http://nodejs.org) and npm installed.
+ 
 ```bash
 npm i -g cxxpods
 ```
