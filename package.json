@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/cxxpods/cxxpods.git"
   },
-  "main": "bin/cxxpods.js",
+  "main": "bin/cxxpods",
   "files": [
     "bin/**",
     "src/**",
@@ -17,10 +17,16 @@
     "compile": "npx babel src/ --out-dir dist  --source-maps inline ",
     "watch": "npx babel src/ --watch --out-dir dist  --source-maps inline",
     "prepublish": "npm run compile",
-    "test": "npm run compile && jest"
+    "test": "npm run compile && jest",
+    "pkg": "npm run compile && npx pkg --out-dir build package.json",
+    "installers": "npm run pkg && ./scripts/make-installers.sh"
   },
   "pkg": {
-    "scripts": "dist/**",
+    "scripts": [
+      "dist/**",
+      "node_modules/simple-git/**/*.js",
+      "bin/cxxpods"
+    ],
     "assets": "src/assets/**"
   },
   "jest": {
@@ -29,8 +35,8 @@
     ]
   },
   "bin": {
-    "cxxpods": "./bin/cxxpods.js",
-    "cpods": "./bin/cxxpods.js"
+    "cxxpods": "./bin/cxxpods",
+    "cpods": "./bin/cxxpods"
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",

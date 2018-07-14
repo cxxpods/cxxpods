@@ -8,4 +8,5 @@ const
 
 // noinspection JSUndefinedPropertyAssignment
 Events.defaultMaxListeners = 100
-require(Path.resolve(__dirname,"..","dist","main.js"))
+//Path.resolve(__dirname,"..","dist","main.js")
+require('../dist/main')

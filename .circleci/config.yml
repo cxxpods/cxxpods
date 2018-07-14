@@ -14,7 +14,13 @@ jobs:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
           - v1-dependencies-
+      - run:
+          name: Get dependencies
+          command: sudo apt-get update && sudo apt-get install -y cmake ruby ruby-dev rubygems golang build-essential && sudo gem install --no-ri --no-rdoc fpm
       - run: npm install
+      - run: |
+          npm run installers
+          go get github.com/tcnksm/ghr
       - save_cache:
           paths:
             - node_modules
@@ -27,9 +33,6 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/repo
-      - run:
-          name: install cmake and deps
-          command: sudo apt-get update && sudo apt-get install -y cmake build-essential
       - run:
           name: test
           command: npm test
