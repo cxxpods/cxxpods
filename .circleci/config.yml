@@ -83,7 +83,8 @@ jobs:
 
           echo "Making installers"
           npm run installers
-
+          cp ~/repo/build/cxxpods-macos ~/repo/build/artifacts/cxxpods-macos
+          cp ~/repo/build/cxxpods-linux ~/repo/build/artifacts/cxxpods-linux
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -recreate v${VERSION} ./build/artifacts/
       - run:
           name: Publish package
