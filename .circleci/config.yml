@@ -4,7 +4,10 @@ defaults: &defaults
   working_directory: ~/repo
   docker:
     - image: circleci/node:10.5.0
-
+  environment:
+    GOROOT: ${HOME}/goroot
+    GOPATH: ${HOME}/go
+    PATH: ${GOROOT}/bin:${GOPATH}/bin:${PATH}
 jobs:
   build:
     <<: *defaults
@@ -17,12 +20,11 @@ jobs:
       - run:
           name: Get dependencies
           command: |
-            GOROOT=${HOME}/goroot
-            GOPATH=${HOME}/go
-            PATH=${GOROOT}/bin:${PATH}
-            export GOPATH GOROOT PATH
+            env
 
-            mkdir ${GOPATH}
+            mkdir -p ${GOPATH}
+            rm -Rf ${GOROOT}
+
             sudo apt-get update
             sudo apt-get install -y cmake ruby ruby-dev rubygems build-essential wget
             sudo gem install --no-ri --no-rdoc fpm
@@ -38,13 +40,10 @@ jobs:
       - run: npm install
       - run: npm run installers
       - run: |
-          GOROOT=${HOME}/goroot
-          GOPATH=${HOME}/go
-          PATH=${GOROOT}/bin:${PATH}
           VERSION=$(node scripts/get-version.js)
-          export GOPATH GOROOT PATH VERSION
 
-          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./build/artifacts/
+          cd ~/repo
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -recreate v${VERSION} ./build/artifacts/
       - save_cache:
           paths:
             - node_modules
