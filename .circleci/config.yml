@@ -5,9 +5,8 @@ defaults: &defaults
   docker:
     - image: circleci/node:10.5.0
   environment:
-    GOROOT: ${HOME}/goroot
-    GOPATH: ${HOME}/go
-    PATH: ${GOROOT}/bin:${GOPATH}/bin:${PATH}
+    GOROOT: ~/goroot
+    GOPATH: ~/go
 jobs:
   build:
     <<: *defaults
@@ -20,8 +19,10 @@ jobs:
       - run:
           name: Get dependencies
           command: |
-            env
+            PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
+            export PATH
 
+            env
             mkdir -p ${GOPATH}
             rm -Rf ${GOROOT}
 
@@ -40,7 +41,11 @@ jobs:
       - run: npm install
       - run: npm run installers
       - run: |
+          PATH=${GOROOT}/bin:${GOPATH}/bin:${PATH}
           VERSION=$(node scripts/get-version.js)
+          env
+
+          export PATH VERSION
 
           cd ~/repo
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -recreate v${VERSION} ./build/artifacts/
