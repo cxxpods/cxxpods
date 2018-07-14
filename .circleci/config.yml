@@ -65,7 +65,7 @@ jobs:
           rm -Rf ${GOROOT} || true
 
           sudo apt-get update
-          sudo apt-get install -y cmake ruby ruby-dev rubygems build-essential wget
+          sudo apt-get install -y cmake ruby ruby-dev rubygems build-essential wget zip
           sudo gem install --no-ri --no-rdoc fpm
 
           cd ${HOME}
@@ -83,8 +83,11 @@ jobs:
 
           echo "Making installers"
           npm run installers
-          cp ~/repo/build/cxxpods-macos ~/repo/build/artifacts/cxxpods-macos
-          cp ~/repo/build/cxxpods-linux ~/repo/build/artifacts/cxxpods-linux
+
+          cd ~/repo/build
+          zip artifacts/cxxpods-macos.zip cxxpods-macos
+          zip artifacts/cxxpods-linux.zip cxxpods-linux
+
           ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -recreate v${VERSION} ./build/artifacts/
       - run:
           name: Publish package
