@@ -158,7 +158,7 @@ export default class Dependency {
   
   toBuildStamp(buildConfig) {
     const cmakeConfig = _.get(this,'project.config.cmake',{})
-    return {
+    return _.omit({
       name: this.name,
       version: this.version,
       dir: this.dir,
@@ -170,7 +170,7 @@ export default class Dependency {
       cmakeConfig,
       srcTimestamp: File.getFileModifiedTimestamp(buildConfig.src),
       dirTimestamp: File.getFileModifiedTimestamp(this.dir)
-    }
+    }, "CMAKE_BUILD_TYPE")
   }
   
   
