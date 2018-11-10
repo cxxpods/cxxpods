@@ -66,6 +66,11 @@ if (NOT CXXPODS_TOOLCHAIN_SETUP)
     endif ()
   endfunction()
 
+  include_directories(
+     BEFORE
+     ${ANDROID_NDK}/sources/cxx-stl/llvm-libc++/include
+${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/
+  )
   set(CXXPODS_TOOLCHAIN_SETUP TRUE)
 
   {{#if toolchainFile}}
