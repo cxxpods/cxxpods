@@ -87,7 +87,7 @@ export default class DependencyBuilder {
     
       const git = Git(parent)
       await git.clone(url, src, {
-        "--depth": "1",
+        //"--depth": "1",
         "--recurse-submodules": null
       })
     }

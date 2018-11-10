@@ -52,11 +52,7 @@ include(CMakeFindDependencyMacro)
       "${CXXPODS_BUILD_ROOT}/include"
     BEFORE
   )
-  include_directories(
-      BEFORE
-      ${ANDROID_NDK}/sources/cxx-stl/llvm-libc++/include
-      ${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/c++/v1/
-  )
+
 
   link_directories(
     "${CXXPODS_BUILD_ROOT}/lib"
