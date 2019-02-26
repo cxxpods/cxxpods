@@ -88,30 +88,39 @@ export default class DependencyBuilder {
       const git = Git(parent)
       await git.clone(url, src, {
         //"--depth": "1",
-        "--recurse-submodules": null
+        //"--recurse-submodules": null
       })
     }
     // noinspection JSUnresolvedFunction
-    const
-      git = Git(src),
-      branchSummary = await git.branchLocal()
+    const git = Git(src)
   
     // noinspection JSCheckFunctionSignatures
     await git.raw(['fetch', '--all', '--tags', '--prune'])
-  
+    await git.raw(['fetch'])
+    
     // noinspection JSCheckFunctionSignatures
     const
-      tags = await git.tags(),
-      realVersion = tags.all.find(tag => tag.includes(version))
-  
+      branchSummary = await git.branch(),
+      tags = await git.tags()
+    
+    let
+      realVersion = tags.all.find(tag => tag.includes(version)),
+      fromBranch = false
+    
+    if (!realVersion) {
+      log.info(`All branches: ${JSON.stringify(branchSummary,null,2)}`)
+      realVersion = branchSummary.all.find(branch => branch.includes(version))
+      fromBranch = !!realVersion
+    }
+    
     if (!realVersion)
-      throw `Unable to find tag for version: ${version}`
+      throw `Unable to find TAG for version: ${version}`
   
     if (realVersion === branchSummary.current) {
       log.info(`${type} Source is already prepared`)
     } else {
       log.info(`${type} Preparing ${name}@${realVersion} for configuration`)
-      await git.checkout([`tags/${realVersion}`, '-b', `${realVersion}`])
+      await git.checkout([(fromBranch ? realVersion : `tags/${realVersion}`), '-b', `${realVersion}`])
       log.info(`${type} Ready to configure ${name}@${realVersion}`)
     }
   }
