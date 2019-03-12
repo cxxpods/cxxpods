@@ -10,6 +10,7 @@ import CMakeOptions from "../util/CMakeOptions"
 import * as _ from "lodash"
 import GetLogger from "../Log"
 import * as sh from 'shelljs'
+import * as Fs from 'fs'
 
 const log = GetLogger(__filename)
 
@@ -72,11 +73,49 @@ export default class DependencyBuilderCMake extends DependencyBuilder {
     const
       cmakeConfig = getValue(() => this.dep.project.config.cmake, {}),
       cmakeRoot = Path.resolve(src, cmakeConfig.root || ""),
-      cmakeFlags = getValue(() => cmakeConfig.flags, {}),
+      cmakeFlags = getValue(() => cmakeConfig.flags, {})
+    
+    let
       cmakeOptionsObj = _.merge(
         {},
         cmakeFlags,
-        type.toCMakeOptions(this.project,this.dep.project)),
+        type.toCMakeOptions(this.project,this.dep.project))
+  
+  
+    const
+      ccacheExe = sh.which("ccache") || "",
+      distccExe = sh.which("distcc") || ""
+  
+    let
+      CMAKE_CXX_COMPILER_LAUNCHER = "",
+      CMAKE_C_COMPILER_LAUNCHER = ""
+  
+    if (ccacheExe.length && Fs.existsSync(ccacheExe)) {
+      CMAKE_CXX_COMPILER_LAUNCHER = ccacheExe
+      CMAKE_C_COMPILER_LAUNCHER = ccacheExe
+    }
+  
+    if (distccExe.length && Fs.existsSync(distccExe)) {
+      if (CMAKE_CXX_COMPILER_LAUNCHER.length) {
+        CMAKE_CXX_COMPILER_LAUNCHER = ` ${ccacheExe}`
+        CMAKE_C_COMPILER_LAUNCHER = ` ${ccacheExe}`
+      }
+    
+      CMAKE_CXX_COMPILER_LAUNCHER = `${distccExe} ${CMAKE_CXX_COMPILER_LAUNCHER}`
+      CMAKE_C_COMPILER_LAUNCHER = `${distccExe} ${CMAKE_C_COMPILER_LAUNCHER}`
+    }
+  
+    cmakeOptionsObj = {
+      ...cmakeOptionsObj,
+      ...(
+        !CMAKE_CXX_COMPILER_LAUNCHER.length ?
+          {} :
+          {
+            CMAKE_CXX_COMPILER_LAUNCHER,
+            CMAKE_C_COMPILER_LAUNCHER
+          })
+    }
+    const
       cmakeOptions = new CMakeOptions(cmakeOptionsObj),
       cmakeCmd = `${Paths.CMake} ${cmakeOptions} ${cmakeRoot}`
     
@@ -108,6 +147,7 @@ export default class DependencyBuilderCMake extends DependencyBuilder {
   
     // BUILD IT BIGGER
     sh.pushd(this.buildDir)
+    
     const
       cmakeBuildType = cmakeOpts.get("CMAKE_BUILD_TYPE","Release"),
       makeCmd = `${Paths.CMake} --build . ${!IsWindows ? `-- -j${Environment.CXXPODS_PROC_COUNT}` : ` -- /P:Configuration=${cmakeBuildType}`}`

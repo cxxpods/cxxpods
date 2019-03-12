@@ -92,6 +92,11 @@ export default class Project {
     log.debug(`Loaded project: ${this.name}`)
   }
   
+  /**
+   * Load config file
+   *
+   * @param path
+   */
   loadConfigFile(path) {
     log.debug(`Loading: ${path}`)
     if (!File.exists(path)) {
@@ -99,7 +104,7 @@ export default class Project {
       return
     }
     this.configFiles.push(path)
-    _.merge(this.config, File.readFileYaml(path))
+    this.config = _.defaultsDeep(File.readFileYaml(path),this.config)
   }
   
   

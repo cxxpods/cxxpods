@@ -108,7 +108,7 @@ export default class DependencyBuilder {
       fromBranch = false
     
     if (!realVersion) {
-      log.info(`All branches: ${JSON.stringify(branchSummary,null,2)}`)
+      //log.info(`All branches: ${JSON.stringify(branchSummary,null,2)}`)
       realVersion = branchSummary.all.find(branch => branch.includes(version))
       fromBranch = !!realVersion
     }

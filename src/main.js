@@ -7,6 +7,11 @@ const
   _ = require('lodash')
 
 
+/**
+ * Find the project root folder
+ *
+ * @returns {any}
+ */
 function findRootPath() {
   let cxxRootPath = null
   let currentDir = pwd
@@ -22,6 +27,7 @@ function findRootPath() {
   
   return cxxRootPath ? Promise.resolve(cxxRootPath) : Promise.reject(`Unable to find cxxpods.yml in ancestors from: ${pwd}`)
 }
+
 
 
 findRootPath()
