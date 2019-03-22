@@ -49,7 +49,9 @@ export default class DependencyBuilderManual extends  DependencyBuilder {
         tmpFile = Tmp.fileSync({mode: 777, prefix: `${name}-${stepName}-`, postfix: '.sh'})
         sh.exec(`chmod 777 ${tmpFile.name}`)
         scriptFile = tmpFile.name
-        File.writeFile(scriptFile, `#!/bin/bash -e \n\n${stepConfig.script}`)
+        const scriptContent = new sh.ShellString(`#!/bin/bash -e \n\n${stepConfig.script}`)
+        scriptContent.to(scriptFile)
+        //File.writeFile(scriptFile, `#!/bin/bash -e \n\n${stepConfig.script}`)
       } else {
         scriptFile = `${dir}/${stepConfig.file}`
       }
