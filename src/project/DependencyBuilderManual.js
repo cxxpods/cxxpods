@@ -46,14 +46,12 @@ export default class DependencyBuilderManual extends  DependencyBuilder {
       // EXPLICIT SCRIPT
       if (stepConfig.script) {
         // noinspection JSCheckFunctionSignatures
-        tmpFile = Tmp.fileSync({mode: 777, prefix: `${name}-${stepName}-`, postfix: '.sh'})
+        tmpFile = Tmp.fileSync({mode: 777, prefix: `${name}-${stepName}-`, postfix: '.sh', discardDescriptor: true})
         sh.exec(`chmod 777 ${tmpFile.name}`)
-        sh.exec(`sync`)
         scriptFile = tmpFile.name
-        const scriptContent = new sh.ShellString(`#!/bin/bash -e \n\n${stepConfig.script}`)
-        scriptContent.to(scriptFile)
-        sh.exec(`sync`)
-        //File.writeFile(scriptFile, `#!/bin/bash -e \n\n${stepConfig.script}`)
+        // const scriptContent = new sh.ShellString(`#!/bin/bash -e \n\n${stepConfig.script}`)
+        // scriptContent.to(scriptFile)
+        File.writeFile(scriptFile, `#!/bin/bash -e \n\n${stepConfig.script}`)
       } else {
         scriptFile = `${dir}/${stepConfig.file}`
       }
