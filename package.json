@@ -44,7 +44,7 @@
     "handlebars": "^4.0.11",
     "js-yaml": "^3.12.0",
     "lockfile": "^1.0.4",
-    "lodash": "^4.17.10",
+    "lodash": "^4.17.11",
     "proper-lockfile": "^3.0.2",
     "semver": "^5.5.0",
     "shelljs": "^0.8.2",
@@ -63,9 +63,9 @@
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "babel-preset-stage-0": "^6.24.1",
-    "jest": "^23.3.0",
+    "jest": "^24.7.1",
     "npx": "^10.2.0",
-    "pkg": "^4.3.3",
+    "pkg": "^4.3.7",
     "typescript": "^2.9.2"
   }
 }
