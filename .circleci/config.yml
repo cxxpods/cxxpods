@@ -81,8 +81,8 @@ jobs:
           echo "Cleaning"
           rm -Rf build dist || true
 
-          echo "Making installers"
-          npm run installers
+          #echo "Making installers"
+          #npm run installers
 
           #cd ~/repo/build
           #zip artifacts/cxxpods-macos.zip cxxpods-macos
