@@ -1,3 +1,4 @@
+import "@babel/polyfill"
 import Triplet from "../../project/Triplet"
 import {CompilerType, Architecture, System} from "../../project/BuildConstants"
 import * as Tmp from 'tmp'
