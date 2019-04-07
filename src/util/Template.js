@@ -1,9 +1,18 @@
+import GetLogger from "../Log"
+
 const
   Handlebars = require("handlebars"),
-  File = require("./File")
+  File = require("./File"),
+  log = GetLogger(__filename)
 
 function processTemplate(templateContent,context,outputFile) {
-  File.writeFile(outputFile,Handlebars.compile(templateContent)(context))
+  const newContent = Handlebars.compile(templateContent)(context)
+  if (File.exists(outputFile) && File.readFile(outputFile) === newContent) {
+    log.info(`File is unchanged: ${outputFile}`)
+    return
+  }
+  
+  File.writeFile(outputFile,newContent)
 }
 
 module.exports = {
