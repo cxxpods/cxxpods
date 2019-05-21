@@ -28,7 +28,7 @@ function findRootPath() {
     try {
       currentDir = Path.dirname(currentDir)
     } catch (err) {
-      console.warn("Unable to find cxxpods.yml", err)
+      console.info("Executing in non-project mode")
       break
     }
   }
