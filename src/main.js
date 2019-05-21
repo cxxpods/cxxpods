@@ -18,9 +18,6 @@ function findRootPath() {
   let cxxRootPath = null
   let currentDir = pwd
   while (!_.isEmpty(currentDir)) {
-    if (typeof currentDir !== "string" || currentDir === "")
-      break
-    
     const testPath = `${currentDir}/cxxpods.yml`
     if (sh.test('-e', testPath)) {
       cxxRootPath = currentDir
@@ -28,8 +25,12 @@ function findRootPath() {
     }
     
     
-    
-    currentDir = Path.dirname(currentDir)
+    try {
+      currentDir = Path.dirname(currentDir)
+    } catch (err) {
+      console.warn("Unable to find cxxpods.yml", err)
+      break
+    }
   }
   
   return Promise.resolve(cxxRootPath) // : Promise.reject(`Unable to find cxxpods.yml in ancestors from: ${pwd}`)
