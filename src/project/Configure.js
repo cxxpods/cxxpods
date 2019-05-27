@@ -82,6 +82,8 @@ async function buildDependency(project, dep, buildConfig) {
   
   // CHECKOUT+UPDATE DEPENDENCY SOURCE
   await builder.checkout()
+  await builder.triggerHook("preconfigure")
+  await builder.applyOverrides()
   await builder.build()
   builder.finish()
   

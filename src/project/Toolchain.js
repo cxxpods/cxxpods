@@ -9,7 +9,7 @@ import {processTemplate} from "../util/Template"
 import {getValue} from "typeguard"
 import {isDefined} from "../util/Checker"
 import Triplet from "./Triplet"
-
+import * as _ from 'lodash'
 const log = GetLogger(__filename)
 
 /**
@@ -174,7 +174,8 @@ export default class Toolchain {
       LD: makeCrossTool('ld'),
       LDD: makeCrossTool('ldd', true),
       STRINGS: makeCrossTool('strings', true),
-      SYSROOT: props.SYSROOT || props.CMAKE_SYSROOT
+      SYSROOT: props.SYSROOT || props.CMAKE_SYSROOT,
+      ARCH: this.triplet.arch
     })
     return props
   }
@@ -192,9 +193,9 @@ export default class Toolchain {
     }
     
     // SYSROOT IF POSSIBLE
-    const androidNdk = opts.ANDROID_NDK
-    let sysroot = opts.CMAKE_SYSROOT || opts.SYSROOT
-    if (!sysroot && androidNdk) {
+    const androidNdk = opts.ANDROID_NDK || process.env.ANDROID_NDK
+    let sysroot = !_.isEmpty(opts.CMAKE_SYSROOT) ? opts.CMAKE_SYSROOT : !_.isEmpty(opts.SYSROOT) ? opts.SYSROOT : null
+    if (this.android && !sysroot && androidNdk) {
       sysroot = `${androidNdk}/sysroot`
     }
     

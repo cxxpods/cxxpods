@@ -6,6 +6,7 @@ import Triplet from "./Triplet"
 import File, {fixPath} from "../util/File"
 import GetLogger from "../Log"
 import {Environment} from "../Config"
+import * as Path from 'path'
 
 const log = GetLogger(__filename)
 
@@ -118,6 +119,7 @@ export default class BuildType {
   }
   
   constructor(project, toolchain, isTool = false) {
+    this.arch = toolchain.triplet.arch
     this.isTool = isTool
     this.toolchain = toolchain
     
@@ -154,9 +156,9 @@ export default class BuildType {
       this.toolchain.toScriptEnvironment(rootProject, project),
       {
         CXXPODS_BUILD_ROOT: this.rootDir,
-        CXXPODS_BUILD_LIB: `${this.rootDir}/lib`,
-        CXXPODS_BUILD_INCLUDE: `${this.rootDir}/include`,
-        CXXPODS_BUILD_CMAKE: `${this.rootDir}/lib/cmake`,
+        CXXPODS_BUILD_LIB: Path.join(this.rootDir,"lib"),
+        CXXPODS_BUILD_INCLUDE: Path.join(this.rootDir,"include"),
+        CXXPODS_BUILD_CMAKE: Path.join(this.rootDir, "lib","cmake"),
       })
   }
   
@@ -172,6 +174,7 @@ export default class BuildType {
       {
         CMAKE_INSTALL_PREFIX: this.rootDir,
         CMAKE_MODULE_PATH: `${this.rootDir}/lib/cmake`,
+        CMAKE_FIND_ROOT_PATH: `${this.rootDir}/lib/cmake`,
         CMAKE_LIBRARY_PATH: `${this.rootDir}/lib`,
         CMAKE_INCLUDE_PATH: `${this.rootDir}/include`,
         CMAKE_C_FLAGS: `-I${this.rootDir}/include`,

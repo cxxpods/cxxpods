@@ -1,11 +1,13 @@
-import File, {fixPath} from "../util/File"
+import File, {exists, fixPath, isDirectory} from "../util/File"
 import {getValue} from "typeguard"
 import OS from 'os'
+import * as Sh from 'shelljs'
 import Git from "simple-git/promise"
 import {processTemplate} from "../util/Template"
 import _ from "lodash"
 import GetLogger from "../Log"
-import Path from 'path'
+import * as Path from 'path'
+import * as Fs from "fs"
 
 const
   log = GetLogger(__filename)
@@ -68,6 +70,46 @@ export default class DependencyBuilder {
     return this.buildConfig.type
   }
   
+  async applyOverrides() {
+    const
+      {dir} = this.dep,
+      overrideDir = Path.join(dir, "override")
+    
+    log.debug(`Checking overrides: ${overrideDir}`)
+    if (isDirectory(overrideDir)) {
+      const {src} = this.buildConfig
+      log.info("Applying overrides",overrideDir, "to", src)
+      Sh.cp("-R", Path.join(overrideDir,"*"), src)
+    }
+  }
+  
+  async triggerHook(hook) {
+    const
+      {dir} = this.dep,
+      {src} = this.buildConfig,
+      hooksDir = Path.join(dir,"hooks"),
+      hookDir = Path.join(hooksDir,hook)
+    
+    if (!isDirectory(hookDir)) {
+      log.info("No hooks for", hook, "in", this.dep.name, dir, hooksDir, hookDir)
+      return
+    }
+    
+    const scripts = Fs.readdirSync(hookDir)
+      .filter(file => !file.startsWith("."))
+      .map(script => Path.join(hookDir, script))
+    
+    log.info("Scripts to run", scripts)
+    
+    scripts
+      .forEach(script => {
+        Sh.exec(script,{
+          cwd: src
+        })
+      })
+    
+    
+  }
   
   /**
    * Checkout the latest code
@@ -94,6 +136,10 @@ export default class DependencyBuilder {
     // noinspection JSUnresolvedFunction
     const git = Git(src)
   
+    try {
+      await git.raw(['reset', '--hard'])
+    } catch (err) {}
+    
     // noinspection JSCheckFunctionSignatures
     await git.raw(['fetch', '--all', '--tags', '--prune'])
     await git.raw(['fetch'])
