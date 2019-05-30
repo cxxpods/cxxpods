@@ -1,8 +1,11 @@
-
+import * as Path from 'path'
 import {configure,makeCMakeFile} from "../project/Configure"
 import Project from "../project/Project"
 import GetLogger from "../Log"
 import {AndroidArgs} from "../project/BuiltType"
+import {getToolchainProperties} from "../project/Toolchain"
+import {writeFile} from "../util/File"
+//import {getToolchainProperties} from "../project/Toolchain"
 
 const
   log = GetLogger(__filename)
@@ -31,6 +34,24 @@ module.exports = (Yargs) => {
       description: "Project management commands",
       builder: Yargs =>
         Yargs
+          .command({
+            command: "toolchain-json",
+            desc: "Print JSON of toolchain properties",
+            // builder: Yargs => {
+            //
+            // },
+            handler: async (argv) => {
+              const
+                project = Project.load(),
+                json = JSON.stringify(await getToolchainProperties(project),null, 2),
+                dir = project.projectDir.toString(),
+                file = Path.join(dir,"toolchains.json")
+              
+              writeFile(file, json)
+              console.log(`Wrote ${file}`)
+            }
+
+          })
           .command(ConfigureCommand)
           .command({
             command: "dependencies",

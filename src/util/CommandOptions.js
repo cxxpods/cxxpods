@@ -1,3 +1,5 @@
+import {isFunction} from "typeguard"
+
 const
   Assert = require("./Assert"),
   File = require("./File")
@@ -108,7 +110,7 @@ export default class CommandOptions {
     for (let key of Object.keys(this.values)) {
       const 
         value = this.values[key],
-        quoteValue = value && value.indexOf(" ") != -1 && useQuotes
+        quoteValue = value && isFunction(value.indexOf) && value.indexOf(" ") > -1 && useQuotes
 
       args.push(`${keyPrefix}${key}${joinWith}${quoteValue ? "\"" : ""}${this.processValue(value)}${quoteValue ? "\"" : ""}`)
     }
