@@ -1,5 +1,5 @@
 
-import File from '../util/File'
+import File, {exists, isDirectory} from '../util/File'
 import * as sh from "shelljs"
 import * as Path from 'path'
 
@@ -150,6 +150,16 @@ export default class Toolchain {
       ...this.toSystemOverrides(rootProject,project,'build.options'),
       ARCH: this.arch,
       SYSTEM: this.system
+    }
+    
+    if (this.system === System.IOS) {
+      const xcodeResult = sh.exec("xcode-select --print-path")
+      Assert.ok(xcodeResult.code === 0, `Unable to determine xcode path: ${xcodeResult.stderr}/${xcodeResult.stdout}`)
+      
+      const xcodeBinPath = `${xcodeResult.stdout.trim().replace("\n","")}/Toolchains/XcodeDefault.xctoolchain/usr/bin`
+      Assert.ok(isDirectory(xcodeBinPath), `Invalid xcode bin ${xcodeBinPath}`)
+      
+      props.PATH = `${xcodeBinPath}:${process.env.PATH}`
     }
     
     if (!this.file)
