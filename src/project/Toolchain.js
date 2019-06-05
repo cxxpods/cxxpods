@@ -152,7 +152,7 @@ export default class Toolchain {
       SYSTEM: this.system
     }
     
-    if (this.system === System.IOS) {
+    if ([System.IOS, System.Darwin].includes(this.system)) {
       const xcodeResult = sh.exec("xcode-select --print-path")
       Assert.ok(xcodeResult.code === 0, `Unable to determine xcode path: ${xcodeResult.stderr}/${xcodeResult.stdout}`)
       

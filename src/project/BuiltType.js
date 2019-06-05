@@ -95,9 +95,11 @@ export default class BuildType {
                 findABI(abi)
               )
             
-            const dir = getValue(() => project.rootProject.projectDir, project.projectDir).toString()
-            if (!Path.isAbsolute(file)) {
-              file = Path.join(dir, file)
+            if (file) {
+              const dir = getValue(() => project.rootProject.projectDir, project.projectDir).toString()
+              if (!Path.isAbsolute(file)) {
+                file = Path.join(dir, file)
+              }
             }
           
             log.info(`Toolchain (${name}) file ${file}`)
