@@ -79,7 +79,8 @@ export default class DependencyBuilderCMake extends DependencyBuilder {
       cmakeOptionsObj = _.merge(
         {},
         cmakeFlags,
-        type.toCMakeOptions(this.project,this.dep.project))
+        type.toCMakeOptions(this.project,this.dep.project)),
+      cmakeEnv = type.toScriptEnvironment(this.project,this.dep.project)
   
   
     const
@@ -126,7 +127,13 @@ export default class DependencyBuilderCMake extends DependencyBuilder {
     sh.pushd(build)
     log.info(`Configuring with cmake root: ${cmakeRoot}`)
     log.info(`Using command: ${cmakeCmd}`)
-    if (sh.exec(cmakeCmd).code !== 0) {
+    if (sh.exec(cmakeCmd, {
+      cwd: build,
+      env: {
+        ...process.env,
+        ...cmakeEnv
+      }
+    }).code !== 0) {
       throw `CMake config failed`
     }
     sh.popd()
@@ -150,10 +157,16 @@ export default class DependencyBuilderCMake extends DependencyBuilder {
     
     const
       cmakeBuildType = cmakeOpts.get("CMAKE_BUILD_TYPE","Release"),
-      makeCmd = `${Paths.CMake} --build . ${!IsWindows ? `-- -j${Environment.CXXPODS_PROC_COUNT}` : ` -- /P:Configuration=${cmakeBuildType}`}`
+      makeCmd = `${Paths.CMake} --build . ${!IsWindows ? `-- -j${Environment.CXXPODS_PROC_COUNT}` : ` -- /P:Configuration=${cmakeBuildType}`}`,
+      cmakeEnv = this.buildConfig.type.toScriptEnvironment(this.project,this.dep.project)
   
     log.info(`Making ${name}@${version} with: ${makeCmd}`)
-    if (sh.exec(makeCmd).code !== 0) {
+    if (sh.exec(makeCmd, {
+      env: {
+        ...process.env,
+        ...cmakeEnv
+      }
+    }).code !== 0) {
       throw `Make failed`
     }
     sh.popd()
@@ -167,7 +180,11 @@ export default class DependencyBuilderCMake extends DependencyBuilder {
         `${Paths.CMake} --build . --target INSTALL -- /P:Configuration=${cmakeBuildType}` :
         `${Paths.Make} -j${Environment.CXXPODS_PROC_COUNT} install`
     log.info(`Installing ${name}@${version} with: ${installCmd}`)
-    if (sh.exec(installCmd).code !== 0) {
+    if (sh.exec(installCmd, {
+      env: {
+        ...process.env,
+        ...cmakeEnv
+      }}).code !== 0) {
       throw `Install failed`
     }
     sh.popd()

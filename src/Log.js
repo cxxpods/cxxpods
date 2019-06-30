@@ -20,9 +20,14 @@ const alignedWithColorsAndTime = winston.format.combine(
 
 // CONSOLE LOGGER
 const ConsoleLogger = new winston.transports.Console({
-  level: 'info',
+  level: verboseEnabled() ? 'info' : 'warn',
   format: alignedWithColorsAndTime
 })
+
+
+export function verboseEnabled() {
+  return process.argv.includes("-v")
+}
 
 
 /**

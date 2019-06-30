@@ -1,11 +1,23 @@
 import * as _ from 'lodash'
-import {CompilerType, Architecture, ProcessorNodeMap, System, ABI} from "./BuildConstants"
+import {
+  CompilerType,
+  Architecture,
+  ProcessorNodeMap,
+  System,
+  ABI,
+  findSystem,
+  findArch,
+  findABI
+} from "./BuildConstants"
 import Toolchain from "./Toolchain"
 import Dependency from "./Dependency"
 import Triplet from "./Triplet"
-import File, {fixPath} from "../util/File"
+import File, {exists, fixPath} from "../util/File"
 import GetLogger from "../Log"
 import {Environment} from "../Config"
+import * as Path from 'path'
+import * as Assert from "assert"
+import {getValue} from "typeguard"
 
 const log = GetLogger(__filename)
 
@@ -55,20 +67,53 @@ export default class BuildType {
       }
       
       Object
-        .keys(config.toolchains || {})
-        .map(triplet => {
-          const
-            toolchainFileOrObject = config.toolchains[triplet],
-            [processor, system, abi] = _.split(triplet, "-")
+        .entries(config.toolchains || {})
+        .map(([name, toolchainConfig]) => {
+          // If name has exactly three parts then its a triplet
+          if (name.split(_).length === 3) {
+            const tripletStr = toolchainConfig
+            
+            const
+              toolchainFileOrObject = config.toolchains[tripletStr],
+              [processor, system, abi] = _.split(tripletStr, "-")
+            
+            toolchains.push(new Toolchain(
+              new Triplet(
+                Object.keys(System).find(it => it.toLowerCase() === system),
+                Object.keys(Architecture).find(it => it.toLowerCase() === processor),
+                Object.keys(ABI).find(it => it.toLowerCase() === abi)
+              ),
+              toolchainFileOrObject
+            ))
+          }
+          // Otherwise, its just the name
+          else {
+            let {system, arch, abi, file, name} = toolchainConfig,
+              triplet = new Triplet(
+                findSystem(system),
+                findArch(arch),
+                findABI(abi)
+              )
+            
+            if (file) {
+              const dir = getValue(() => project.rootProject.projectDir, project.projectDir).toString()
+              if (!Path.isAbsolute(file)) {
+                file = Path.join(dir, file)
+              }
+            }
           
-          toolchains.push(new Toolchain(
-            new Triplet(
-              Object.keys(System).find(it => it.toLowerCase() === system),
-              Object.keys(Architecture).find(it => it.toLowerCase() === processor),
-              Object.keys(ABI).find(it => it.toLowerCase() === abi)
-            ),
-            toolchainFileOrObject
-          ))
+            log.info(`Toolchain (${name}) file ${file}`)
+            Assert.ok(exists(file), `Toolchain (${name}) file ${file} does not exist`)
+            
+            toolchains.push(new Toolchain(
+              triplet,
+              {
+                file,
+                name: name || triplet.toString(),
+                ...toolchainConfig
+              }
+            ))
+          }
         })
       
     }
@@ -118,6 +163,7 @@ export default class BuildType {
   }
   
   constructor(project, toolchain, isTool = false) {
+    this.arch = toolchain.triplet.arch
     this.isTool = isTool
     this.toolchain = toolchain
     
@@ -154,9 +200,9 @@ export default class BuildType {
       this.toolchain.toScriptEnvironment(rootProject, project),
       {
         CXXPODS_BUILD_ROOT: this.rootDir,
-        CXXPODS_BUILD_LIB: `${this.rootDir}/lib`,
-        CXXPODS_BUILD_INCLUDE: `${this.rootDir}/include`,
-        CXXPODS_BUILD_CMAKE: `${this.rootDir}/lib/cmake`,
+        CXXPODS_BUILD_LIB: Path.join(this.rootDir,"lib"),
+        CXXPODS_BUILD_INCLUDE: Path.join(this.rootDir,"include"),
+        CXXPODS_BUILD_CMAKE: Path.join(this.rootDir, "lib","cmake")
       })
   }
   
@@ -172,6 +218,7 @@ export default class BuildType {
       {
         CMAKE_INSTALL_PREFIX: this.rootDir,
         CMAKE_MODULE_PATH: `${this.rootDir}/lib/cmake`,
+        CMAKE_FIND_ROOT_PATH: `${this.rootDir}/lib/cmake`,
         CMAKE_LIBRARY_PATH: `${this.rootDir}/lib`,
         CMAKE_INCLUDE_PATH: `${this.rootDir}/include`,
         CMAKE_C_FLAGS: `-I${this.rootDir}/include`,

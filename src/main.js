@@ -28,7 +28,7 @@ function findRootPath() {
     try {
       currentDir = Path.dirname(currentDir)
     } catch (err) {
-      console.info("Executing in non-project mode")
+      //console.info("Executing in non-project mode")
       break
     }
   }
@@ -46,8 +46,13 @@ findRootPath()
     async function run() {
       // ARGS
       let Yargs = require("yargs")
+        .option("-v",{
+          description: `Verbose logging`,
+          type: "boolean",
+          global: true
+        })
   
-  
+      
       /**
        * Add command files
        *
@@ -85,12 +90,12 @@ findRootPath()
     
     if (cxxRootPath) {
       const lockfilePath = Path.resolve(Os.platform().toLowerCase().startsWith("win") ? "c:/temp" : "/tmp", `${Buffer.from(cxxRootPath).toString('base64')}.lock`)
-      sh.exec(`sleep ${Math.floor(Math.random() * 5)}`)
+      //sh.exec(`sleep ${Math.floor(Math.random() * 5)}`)
   
-      console.log(`Using lock file: ${lockfilePath}`)
+      //console.log(`Using lock file: ${lockfilePath}`)
   
       lockfile.lock(lockfilePath, {wait: 1000 * 60 * 60}, async (err) => {
-        console.log("Received lock")
+        //console.log("Received lock")
     
     
         // LOGGER

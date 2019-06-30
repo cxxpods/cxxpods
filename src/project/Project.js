@@ -29,6 +29,20 @@ function resolveConfigVariables(project, context = null, processedConfigs = []) 
  * Main project structure
  */
 export default class Project {
+  
+  /**
+   * Load project from disk
+   *
+   * @param path
+   * @returns {Project}
+   */
+  static load(path = sh.pwd()) {
+    
+    //export function loadProject(path = sh.pwd()) {
+      return new Project(path)
+    
+  }
+  
   constructor(path = sh.pwd(), rootProject = null, isTool = false, depConfig = {}) {
     
    
@@ -44,7 +58,10 @@ export default class Project {
       rootProject.toolsBuildType :
       new BuildType(this, Toolchain.host, true)
     
-    this.config = {}
+    this.config = {
+      toolchainExcludeHost: false
+    }
+    
     this.configFiles = []
     this.toolchains = getValue(() => rootProject.toolchains, [])
     this.buildTypes = getValue(() => rootProject.buildTypes, [])

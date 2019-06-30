@@ -82,6 +82,8 @@ async function buildDependency(project, dep, buildConfig) {
   
   // CHECKOUT+UPDATE DEPENDENCY SOURCE
   await builder.checkout()
+  await builder.triggerHook("preconfigure")
+  await builder.applyOverrides()
   await builder.build()
   builder.finish()
   
@@ -108,6 +110,7 @@ async function buildTools(project) {
  * @param project
  */
 async function buildDependencies(project) {
+  
   const {dependencyGraph} = Project
   
   for (let dep of dependencyGraph) {
@@ -119,15 +122,7 @@ async function buildDependencies(project) {
   }
 }
 
-/**
- * Load project from disk
- *
- * @param path
- * @returns {Project}
- */
-function loadProject(path = sh.pwd()) {
-  return new Project(path)
-}
+
 
 /**
  * Configure project command
@@ -136,7 +131,7 @@ function loadProject(path = sh.pwd()) {
  */
 export async function configure(argv) {
   const
-    project = loadProject()
+    project = Project.load()
   
   log.info(`Generating cmake file: ${project.name}`)
   await makeCMakeFile(project)

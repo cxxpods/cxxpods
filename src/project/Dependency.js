@@ -6,6 +6,8 @@ import File from "../util/File"
 import * as _ from 'lodash'
 import * as SemVer from 'semver'
 import {realRootProject} from "../util/ProjectUtils"
+import {getValue} from "typeguard"
+
 const
   log = GetLogger(__filename)
 
@@ -54,7 +56,10 @@ const DependencyManager = {
       // FIND MAX UNIQUE VERSION FIRST
       _.groupBy(this.allDependencies,"name"), versionGroup =>
         versionGroup.reduce((maxVersion, version) =>
-            !maxVersion || SemVer.gt(SemVer.coerce(version.version),SemVer.coerce(maxVersion.version)) ?
+            !maxVersion || getValue(() =>
+              SemVer.gt(SemVer.coerce(version.version),SemVer.coerce(maxVersion.version)),
+              version.version <= maxVersion.version
+            ) ?
               version :
               maxVersion
           , null))

@@ -29,23 +29,24 @@ if (NOT CXXPODS_TOOLCHAIN_SETUP)
   function(cxxpods_toolchain_export)
     if (NOT CXXPODS_TOOLCHAIN_EXPORTED)
 
+
       {{#if android}}
-      set(CMAKE_CROSS_PREFIX ${ANDROID_TOOLCHAIN_PREFIX})
+      #set(CMAKE_CROSS_PREFIX ${ANDROID_TOOLCHAIN_PREFIX})
       {{/if}}
 
       # CHECK REQUIRED VARS
-      foreach (_checkVar ${CXXPODS_CROSS_REQUIRED_VARS})
-        if ("${${_checkVar}}" STREQUAL "")
-          list(APPEND _missingVars ${_checkVar})
-        endif ()
-      endforeach ()
+      #foreach (_checkVar ${CXXPODS_CROSS_REQUIRED_VARS})
+      #  if ("${${_checkVar}}" STREQUAL "")
+      #    list(APPEND _missingVars ${_checkVar})
+      #  endif ()
+      #endforeach ()
 
 
-      list(LENGTH _missingVars _missingVarCount)
-      if(NOT ${_missingVarCount} EQUAL 0)
-        # ${CXXPODS_CROSS_REQUIRED_VARS}
-        message(FATAL_ERROR "CXXPODS: ${_missingVars} are all required to be set for toolchains.  ${CXXPODS_CROSS_OPTIONAL_VARS} are optionally suggested")
-      endif()
+      #list(LENGTH _missingVars _missingVarCount)
+      #if(NOT ${_missingVarCount} EQUAL 0)
+      #  # ${CXXPODS_CROSS_REQUIRED_VARS}
+      #  message(FATAL_ERROR "CXXPODS: ${_missingVars} are all required to be set for toolchains.  ${CXXPODS_CROSS_OPTIONAL_VARS} are optionally suggested")
+      #endif()
 
       # GET EXPORT FILE
       set(exportFile $ENV{CXXPODS_EXPORT_FILE})
